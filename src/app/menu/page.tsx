@@ -1,10 +1,13 @@
 'use client'
 import React, { useState } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/router'
 import { Search, Star, Clock, Plus, Filter, ArrowLeft, ChefHat, ShoppingCart, Heart, MapPin } from 'lucide-react';
 import Link from 'next/link';
 
 const Menu = () => {
+    const router = useRouter()
+
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [cartCount, setCartCount] = useState(0);
     const [favorites, setFavorites] = useState<number[]>([]);
@@ -115,7 +118,7 @@ const Menu = () => {
             <div className="max-w-6xl mx-auto px-4 py-4">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                        <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                        <button onClick={() => router.back()} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
                             <ArrowLeft className="w-5 h-5 text-gray-600" />
                         </button>
                         <div className="flex items-center space-x-2">
