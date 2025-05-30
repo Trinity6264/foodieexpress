@@ -3,10 +3,13 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Minus, Plus, Trash2, Clock, MapPin, ArrowLeft, CreditCard, Wallet, Smartphone, ChefHat, Star, Tag, CheckCircle, X } from 'lucide-react';
-import Link from 'next/link';
 
 const Cart = () => {
-    const router = useRouter()
+    const router = useRouter();
+
+    const gotoTrackOrder = () => {
+        router.push('/track_order');
+    };
 
     const [cartItems, setCartItems] = useState([
         {
@@ -482,20 +485,21 @@ const Cart = () => {
                     <div className="space-y-3">
                         <button
                             onClick={closeSuccessDialog}
-                            className="w-full bg-orange-600 text-white py-3 rounded-lg hover:bg-orange-700 transition-colors font-semibold"
+                            className="w-full bg-orange-600 cursor-pointer text-white py-3 rounded-lg hover:bg-orange-700 transition-colors font-semibold"
                         >
                             Continue Shopping
                         </button>
-                        <Link href={'/track_order'}
+                        <button
                             onClick={() => {
+                                gotoTrackOrder();
                                 closeSuccessDialog();
-
+                                
                                 // router.push('/orders'); // Uncomment if you have an orders page
                             }}
-                            className="w-full border border-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
+                            className="w-full border cursor-pointer border-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
                         >
                             Track Order
-                        </Link>
+                        </button>
                     </div>
                 </div>
             </div>
