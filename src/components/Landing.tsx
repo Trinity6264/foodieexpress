@@ -269,9 +269,9 @@ const Landing = () => {
                 </div>
 
                 <div className="text-center mt-12">
-                    <button className="bg-orange-600 text-white px-8 py-3 rounded-lg hover:bg-orange-700 transition-colors font-semibold text-lg">
+                    <Link href={'/restaurants'} className="bg-orange-600 text-white px-8 py-3 rounded-lg hover:bg-orange-700 transition-colors font-semibold text-lg">
                         View All Restaurants
-                    </button>
+                    </Link>
                 </div>
             </div>
         </section>
