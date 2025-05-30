@@ -1,11 +1,11 @@
 'use client'
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { Search, Star, Clock, Plus, Filter, ArrowLeft, ChefHat, ShoppingCart, Heart, MapPin } from 'lucide-react';
+import { Search, Star, Clock, Plus, Filter, ChefHat, Heart, MapPin } from 'lucide-react';
 
 const Menu = () => {
     const [selectedCategory, setSelectedCategory] = useState('all');
-    const [cartCount, setCartCount] = useState(0);
+    // const [cartCount, setCartCount] = useState(0);
     const [favorites, setFavorites] = useState<number[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -97,9 +97,9 @@ const Menu = () => {
         return matchesCategory && matchesSearch;
     });
 
-    const addToCart = () => {
-        setCartCount(prev => prev + 1);
-    };
+    // const addToCart = () => {
+    //     setCartCount(prev => prev + 1);
+    // };
 
     const toggleFavorite = (itemId: number) => {
         setFavorites(prev =>
@@ -109,31 +109,31 @@ const Menu = () => {
         );
     };
 
-    const Header = () => (
-        <div className="bg-white shadow-sm border-b sticky top-0 z-50">
-            <div className="max-w-6xl mx-auto px-4 py-4">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                        <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                            <ArrowLeft className="w-5 h-5 text-gray-600" />
-                        </button>
-                        <div className="flex items-center space-x-2">
-                            <ChefHat className="w-6 h-6 text-orange-600" />
-                            <h1 className="text-xl font-bold text-gray-900">Menu</h1>
-                        </div>
-                    </div>
-                    <button className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                        <ShoppingCart className="w-6 h-6 text-gray-600" />
-                        {cartCount > 0 && (
-                            <span className="absolute -top-1 -right-1 bg-orange-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                                {cartCount}
-                            </span>
-                        )}
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
+    // const Header = () => (
+    //     <div className="bg-white shadow-sm border-b sticky top-0 z-50">
+    //         <div className="max-w-6xl mx-auto px-4 py-4">
+    //             <div className="flex items-center justify-between">
+    //                 <div className="flex items-center space-x-4">
+    //                     <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+    //                         <ArrowLeft className="w-5 h-5 text-gray-600" />
+    //                     </button>
+    //                     <div className="flex items-center space-x-2">
+    //                         <ChefHat className="w-6 h-6 text-orange-600" />
+    //                         <h1 className="text-xl font-bold text-gray-900">Menu</h1>
+    //                     </div>
+    //                 </div>
+    //                 <button className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
+    //                     <ShoppingCart className="w-6 h-6 text-gray-600" />
+    //                     {cartCount > 0 && (
+    //                         <span className="absolute -top-1 -right-1 bg-orange-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+    //                             {cartCount}
+    //                         </span>
+    //                     )}
+    //                 </button>
+    //             </div>
+    //         </div>
+    //     </div>
+    // );
 
     const RestaurantInfo = () => (
         <div className="bg-white shadow-sm">
@@ -202,8 +202,8 @@ const Menu = () => {
                             key={category.id}
                             onClick={() => setSelectedCategory(category.id)}
                             className={`px-4 py-2 rounded-full whitespace-nowrap text-sm font-medium transition-colors ${selectedCategory === category.id
-                                    ? 'bg-orange-600 text-white'
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                ? 'bg-orange-600 text-white'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                 }`}
                         >
                             {category.name} ({category.count})
@@ -235,8 +235,8 @@ const Menu = () => {
                 >
                     <Heart
                         className={`w-4 h-4 ${favorites.includes(item.id)
-                                ? 'text-red-500 fill-current'
-                                : 'text-gray-400'
+                            ? 'text-red-500 fill-current'
+                            : 'text-gray-400'
                             }`}
                     />
                 </button>
@@ -256,7 +256,7 @@ const Menu = () => {
                         ₵{item.price.toFixed(2)}
                     </div>
                     <button
-                        onClick={() => addToCart()}
+                        // onClick={() => addToCart()}
                         className="flex items-center space-x-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors"
                     >
                         <Plus className="w-4 h-4" />
@@ -269,7 +269,6 @@ const Menu = () => {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <Header />
             <RestaurantInfo />
             <SearchAndFilter />
             <Categories />

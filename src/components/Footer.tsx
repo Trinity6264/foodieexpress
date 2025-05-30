@@ -1,5 +1,4 @@
 import { ChefHat, X, Mail, MapPin, Phone, Facebook, Instagram, } from 'lucide-react'
-import React from 'react'
 
 const Footer = () => {
   return (

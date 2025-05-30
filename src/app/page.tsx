@@ -1,5 +1,5 @@
 // import CartPage from "@/pages/Cart";
-import Landing from "@/pages/Landing";
+import Landing from "@/components/Landing";
 
 export default function Home() {
   return (
