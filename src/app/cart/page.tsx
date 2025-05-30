@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Minus, Plus, Trash2, Clock, MapPin, ArrowLeft, CreditCard, Wallet, Smartphone, ChefHat, Star, Tag, CheckCircle, X } from 'lucide-react';
+import Link from 'next/link';
 
 const Cart = () => {
     const router = useRouter()
@@ -485,15 +486,16 @@ const Cart = () => {
                         >
                             Continue Shopping
                         </button>
-                        <button
+                        <Link href={'/track_order'}
                             onClick={() => {
                                 closeSuccessDialog();
+
                                 // router.push('/orders'); // Uncomment if you have an orders page
                             }}
                             className="w-full border border-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
                         >
                             Track Order
-                        </button>
+                        </Link>
                     </div>
                 </div>
             </div>
