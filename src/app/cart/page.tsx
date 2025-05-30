@@ -1,9 +1,12 @@
 'use client'
 import React, { useState } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { Minus, Plus, Trash2, Clock, MapPin, ArrowLeft, CreditCard, Wallet, Smartphone, ChefHat, Star, Tag } from 'lucide-react';
 
 const Cart = () => {
+    const router = useRouter()
+
     const [cartItems, setCartItems] = useState([
         {
             id: 1,
@@ -86,7 +89,7 @@ const Cart = () => {
             <div className="max-w-4xl mx-auto px-4 py-4">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                        <button className="p-2 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors">
+                        <button onClick={() => router.back()} className="p-2 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors">
                             <ArrowLeft className="w-5 h-5 text-gray-600" />
                         </button>
                         <div className="flex items-center space-x-2">
