@@ -3,9 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Search,  Star, Clock, ChefHat, Truck, Shield, Zap, ArrowRight, PlayCircle } from 'lucide-react';
+import Link from 'next/link';
+import Header from './Header';
 
 const Landing = () => {
+ 
     const [currentSlide, setCurrentSlide] = useState(0);
+
+ 
 
     // Auto-slide functionality
     useEffect(() => {
@@ -232,7 +237,7 @@ const Landing = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                     {featuredRestaurants.map((restaurant) => (
-                        <div key={restaurant.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow group">
+                        <Link href={'/menu'} key={restaurant.id} className="bg-white rounded-lg shadow-lg overflow-hidden cursor-pointer hover:shadow-xl transition-shadow group">
                             <div className="relative overflow-hidden">
                                 <Image
                                     src={restaurant.image}
@@ -259,7 +264,7 @@ const Landing = () => {
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </Link>
                     ))}
                 </div>
 
@@ -379,6 +384,7 @@ const Landing = () => {
 
     return (
         <div className="min-h-screen">
+            <Header />
             <HeroSection />
             <FeaturesSection />
             <RestaurantsSection />
