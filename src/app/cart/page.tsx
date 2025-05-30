@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Minus, Plus, Trash2, Clock, MapPin, ArrowLeft, CreditCard, Wallet, Smartphone, ChefHat, Star, Tag } from 'lucide-react';
+import { Minus, Plus, Trash2, Clock, MapPin, ArrowLeft, CreditCard, Wallet, Smartphone, ChefHat, Star, Tag, CheckCircle, X } from 'lucide-react';
 
 const Cart = () => {
     const router = useRouter()
@@ -49,6 +49,9 @@ const Cart = () => {
     const [deliveryAddress, setDeliveryAddress] = useState("123 University Avenue, Kumasi");
     const [paymentMethod, setPaymentMethod] = useState("card");
     const [deliveryInstructions, setDeliveryInstructions] = useState("");
+    const [isOrderPlaced, setIsOrderPlaced] = useState(false);
+    const [orderNumber, setOrderNumber] = useState("");
+    const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
     const updateQuantity = (id: number, newQuantity: number) => {
         if (newQuantity === 0) {
@@ -75,6 +78,48 @@ const Cart = () => {
             alert("Invalid promo code");
         }
         setPromoCode("");
+    };
+
+    const generateOrderNumber = () => {
+        return `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+    };
+
+    const handlePlaceOrder = async () => {
+        // Basic validation
+        if (!deliveryAddress.trim()) {
+            alert("Please enter a delivery address");
+            return;
+        }
+
+        setIsPlacingOrder(true);
+
+        try {
+            // Simulate API call delay
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            // Generate order number
+            const newOrderNumber = generateOrderNumber();
+            setOrderNumber(newOrderNumber);
+
+            // Show success dialog
+            setIsOrderPlaced(true);
+
+            // Clear cart after successful order
+            // setCartItems([]);
+
+        } catch (_) {
+            alert("Failed to place order. Please try again.");
+            console.error("Order placement error:", _);
+        } finally {
+            setIsPlacingOrder(false);
+        }
+    };
+
+    const closeSuccessDialog = () => {
+        setIsOrderPlaced(false);
+        // Clear cart and redirect to home or orders page
+        setCartItems([]);
+        // router.push('/orders'); // Uncomment if you have an orders page
     };
 
     const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -357,12 +402,100 @@ const Cart = () => {
                 </div>
             </div>
 
-            <button className="w-full mt-6 bg-orange-600 text-white py-4 rounded-lg hover:bg-orange-700 transition-colors font-semibold text-lg">
-                Place Order - ₵{total.toFixed(2)}
+            <button
+                onClick={handlePlaceOrder}
+                disabled={isPlacingOrder}
+                className="w-full mt-6 cursor-pointer bg-orange-600 text-white py-4 rounded-lg hover:bg-orange-700 transition-colors font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            >
+                {isPlacingOrder ? (
+                    <>
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                        Placing Order...
+                    </>
+                ) : (
+                    `Place Order - ₵${total.toFixed(2)}`
+                )}
             </button>
 
             <div className="mt-4 text-xs text-gray-500 text-center">
                 By placing your order, you agree to our Terms of Service and Privacy Policy
+            </div>
+        </div>
+    );
+
+    // Success Dialog Component
+    const SuccessDialog = () => (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4">
+            <div className="bg-white rounded-2xl max-w-md w-full mx-4 overflow-hidden">
+                {/* Header */}
+                <div className="relative bg-gradient-to-r from-green-500 to-green-600 px-6 py-8 text-center">
+                    <button
+                        onClick={closeSuccessDialog}
+                        className="absolute top-4 right-4 text-white hover:text-gray-200 transition-colors"
+                    >
+                        <X className="w-6 h-6" />
+                    </button>
+                    <div className="mb-4">
+                        <CheckCircle className="w-16 h-16 text-white mx-auto" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-white mb-2">Order Successful!</h2>
+                    <p className="text-green-100">Your delicious meal is on its way</p>
+                </div>
+
+                {/* Content */}
+                <div className="px-6 py-6">
+                    <div className="text-center mb-6">
+                        <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                            <p className="text-sm text-gray-600 mb-1">Order Number</p>
+                            <p className="text-lg font-bold text-gray-900">{orderNumber}</p>
+                        </div>
+
+                        <div className="space-y-3 text-sm">
+                            <div className="flex justify-between items-center">
+                                <span className="text-gray-600">Total Amount</span>
+                                <span className="font-semibold text-gray-900">₵{total.toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-gray-600">Payment Method</span>
+                                <span className="font-semibold text-gray-900 capitalize">
+                                    {paymentMethod === 'momo' ? 'Mobile Money' :
+                                        paymentMethod === 'cash' ? 'Cash on Delivery' : 'Card Payment'}
+                                </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-gray-600">Delivery Time</span>
+                                <span className="font-semibold text-gray-900">25-35 mins</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
+                        <div className="flex items-center text-orange-800">
+                            <Clock className="w-5 h-5 mr-2" />
+                            <span className="text-sm font-medium">
+                                We&apos;ll send you updates about your order via SMS
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="space-y-3">
+                        <button
+                            onClick={closeSuccessDialog}
+                            className="w-full bg-orange-600 text-white py-3 rounded-lg hover:bg-orange-700 transition-colors font-semibold"
+                        >
+                            Continue Shopping
+                        </button>
+                        <button
+                            onClick={() => {
+                                closeSuccessDialog();
+                                // router.push('/orders'); // Uncomment if you have an orders page
+                            }}
+                            className="w-full border border-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
+                        >
+                            Track Order
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     );
@@ -411,6 +544,9 @@ const Cart = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Success Dialog */}
+            {isOrderPlaced && <SuccessDialog />}
         </div>
     );
 };
