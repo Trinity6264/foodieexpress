@@ -333,7 +333,7 @@ const RestaurantsPage = () => {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {filteredRestaurants.map((restaurant) => (
-                            <Link href={`/menu/${restaurant.id}`} key={restaurant.id}>
+                            <Link href={`/menu`} key={restaurant.id}>
                                 <div className="bg-white rounded-lg shadow-lg overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
                                     <div className="relative overflow-hidden">
                                         <Image
