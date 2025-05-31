@@ -2,15 +2,17 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Search, Star, Clock, Plus, Filter, ArrowLeft, ChefHat, ShoppingCart, Heart, MapPin } from 'lucide-react';
+import { Search, Star, Clock, Filter, ArrowLeft, ChefHat, ShoppingCart,  MapPin } from 'lucide-react';
 import Link from 'next/link';
+import { MenuItemInterface } from '@/interfaces/ItemInfoInterface';
 
 const Menu = () => {
     const router = useRouter()
 
     const [selectedCategory, setSelectedCategory] = useState('all');
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [cartCount, setCartCount] = useState(0);
-    const [favorites, setFavorites] = useState<number[]>([]);
+    // const [favorites, setFavorites] = useState<number[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
 
     const restaurant = {
@@ -32,7 +34,7 @@ const Menu = () => {
         { id: 'drinks', name: 'Beverages', count: 7 }
     ];
 
-    const menuItems = [
+    const menuItems: Array<MenuItemInterface> = [
         {
             id: 1,
             name: "Jollof Rice with Chicken",
@@ -101,17 +103,17 @@ const Menu = () => {
         return matchesCategory && matchesSearch;
     });
 
-    const addToCart = () => {
-        setCartCount(prev => prev + 1);
-    };
+    // const addToCart = () => {
+    //     setCartCount(prev => prev + 1);
+    // };
 
-    const toggleFavorite = (itemId: number) => {
-        setFavorites(prev =>
-            prev.includes(itemId)
-                ? prev.filter(id => id !== itemId)
-                : [...prev, itemId]
-        );
-    };
+    // const toggleFavorite = (itemId: number) => {
+    //     setFavorites(prev =>
+    //         prev.includes(itemId)
+    //             ? prev.filter(id => id !== itemId)
+    //             : [...prev, itemId]
+    //     );
+    // };
 
     const Header = () => (
         <div className="bg-white shadow-sm border-b sticky top-0 z-50">
@@ -153,20 +155,24 @@ const Menu = () => {
                     <div className="flex-1">
                         <h2 className="text-2xl font-bold text-gray-900 mb-2">{restaurant.name}</h2>
                         <p className="text-gray-600 mb-3">{restaurant.cuisine}</p>
-                        <div className="flex items-center gap-6 text-sm text-gray-600">
+                        <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-6 text-sm text-gray-600 ">
                             <div className="flex items-center">
                                 <Star className="w-4 h-4 text-yellow-400 fill-current mr-1" />
                                 <span className="font-medium">{restaurant.rating}</span>
                                 <span className="ml-1">({restaurant.reviews} reviews)</span>
                             </div>
-                            <div className="flex items-center">
-                                <Clock className="w-4 h-4 mr-1" />
-                                <span>{restaurant.deliveryTime}</span>
+
+                            <div className='flex items-center gap-3 md:gap-6'>
+                                <div className="flex items-center">
+                                    <Clock className="w-4 h-4 mr-1" />
+                                    <span>{restaurant.deliveryTime}</span>
+                                </div>
+                                <div className="flex items-center">
+                                    <MapPin className="w-4 h-4 mr-1" />
+                                    <span>Delivery {restaurant.deliveryFee}</span>
+                                </div>
                             </div>
-                            <div className="flex items-center">
-                                <MapPin className="w-4 h-4 mr-1" />
-                                <span>Delivery {restaurant.deliveryFee}</span>
-                            </div>
+                            
                         </div>
                     </div>
                 </div>
@@ -219,56 +225,7 @@ const Menu = () => {
     );
 
     const MenuItem = ({ item }: { item: typeof menuItems[0] }) => (
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-            <div className="relative">
-                <Image
-                    src={item.image}
-                    alt={item.name}
-                    width={300}
-                    height={200}
-                    className="w-full h-48 object-cover"
-                />
-                {item.popular && (
-                    <div className="absolute top-3 left-3 bg-orange-600 text-white px-2 py-1 rounded-full text-xs font-medium">
-                        Popular
-                    </div>
-                )}
-                <button
-                    onClick={() => toggleFavorite(item.id)}
-                    className="absolute top-3 right-3 p-2 bg-white rounded-full shadow-md hover:bg-gray-50 transition-colors"
-                >
-                    <Heart
-                        className={`w-4 h-4 ${favorites.includes(item.id)
-                                ? 'text-red-500 fill-current'
-                                : 'text-gray-400'
-                            }`}
-                    />
-                </button>
-            </div>
-
-            <div className="p-4">
-                <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-semibold text-gray-900 text-lg">{item.name}</h3>
-                    {item.spicy && (
-                        <span className="text-red-500 text-sm">🌶️</span>
-                    )}
-                </div>
-                <p className="text-gray-600 text-sm mb-4 line-clamp-2">{item.description}</p>
-
-                <div className="flex items-center justify-between">
-                    <div className="text-xl font-bold text-gray-900">
-                        ₵{item.price.toFixed(2)}
-                    </div>
-                    <button
-                        onClick={() => addToCart()}
-                        className="flex items-center space-x-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors"
-                    >
-                        <Plus className="w-4 h-4" />
-                        <span>Add</span>
-                    </button>
-                </div>
-            </div>
-        </div>
+        <MenuItem item={item} key={item.id}/>
     );
 
     return (
