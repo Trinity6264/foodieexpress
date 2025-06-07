@@ -146,6 +146,7 @@ const RestaurantInfoPage = () => {
                                     >
                                         <option value="Local Ghanaian Foods">Local Ghanaian Foods</option>
                                         <option value="Foreign Foods">Foreign Foods</option>
+                                        <option value="Both">Both</option> {/* Added "Both" option */}
                                     </select>
                                 ) : (
                                     <p className="mt-1 text-lg text-gray-900">{restaurant.cuisine}</p>

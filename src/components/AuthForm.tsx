@@ -30,7 +30,7 @@ const AuthForm = ({ isSignUp }: AuthFormProps) => {
                 return;
             }
             alert(`Sign Up successful for ${email}! (Simulated)`);
-            router.push('/login'); // Redirect to login after sign up
+            router.push('/restaurant-setup'); // Redirect to new onboarding page after signup
         } else {
             alert(`Logged in as ${email}! (Simulated)`);
             // Redirect to the new restaurant dashboard page
