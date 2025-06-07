@@ -2,7 +2,7 @@
  * Represents a single menu item offered by a restaurant.
  */
 export interface MenuItemInterface {
-    readonly id: number;
+    readonly id: string;
     readonly name: string;
     readonly description: string;
     readonly price: number;

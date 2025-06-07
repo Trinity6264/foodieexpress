@@ -1,490 +1,206 @@
-// src/app/dashboard/menu-management/page.tsx
 'use client';
+
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ChefHat, PlusCircle, Edit, Trash2, Save, XCircle } from 'lucide-react';
+import { ChefHat, PlusCircle, Edit, Trash2, Save, AlertTriangle, UtensilsCrossed } from 'lucide-react';
 import { MenuItemInterface } from '@/interfaces/ItemInfoInterface';
-import ImageUploadInput from '@/components/ImageUploadInput'; // Import the new component
+import ImageUploadInput from '@/components/ImageUploadInput';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { fetchMenuItems, addMenuItem, updateMenuItem, deleteMenuItem } from '@/store/features/menuSlice';
 
-// Mock menu items for demonstration
-const mockMenuItems: MenuItemInterface[] = [
-    {
-        id: 1,
-        name: "Jollof Rice with Chicken",
-        description: "Aromatic rice cooked in rich tomato sauce with tender grilled chicken",
-        price: 25.00,
-        category: 'Local Ghanaian Foods',
-        image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=300&h=200&fit=crop",
-        popular: true,
-        spicy: true
-    },
-    {
-        id: 2,
-        name: "Banku with Tilapia",
-        description: "Traditional fermented corn dough served with grilled tilapia and pepper sauce",
-        price: 30.00,
-        category: 'Local Ghanaian Foods',
-        image: "https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=300&h=200&fit=crop",
-        popular: false,
-        spicy: true
-    },
-    {
-        id: 3,
-        name: "Spaghetti Bolognese",
-        description: "Classic Italian pasta dish with a rich meaty tomato sauce",
-        price: 35.00,
-        category: 'Foreign Foods',
-        image: "https://images.unsplash.com/photo-1621996346565-e3dbc353d2e5?w=300&h=200&fit=crop",
-        popular: true,
-        spicy: false
-    },
-];
+// A blank item structure for the 'Add New' form
+const blankFormState: Omit<MenuItemInterface, 'id'> = {
+    name: '',
+    description: '',
+    price: 0,
+    category: 'Local Ghanaian Foods',
+    image: '',
+    popular: false,
+    spicy: false,
+};
 
 const MenuManagementPage = () => {
-    const [menuItems, setMenuItems] = useState<MenuItemInterface[]>(mockMenuItems);
+    const dispatch = useAppDispatch();
+    const { restaurantInfo } = useAppSelector((state) => state.auth);
+    const { items: menuItems, status, error } = useAppSelector((state) => state.menu);
+
+    const [isFormVisible, setIsFormVisible] = useState(false);
     const [editingItem, setEditingItem] = useState<MenuItemInterface | null>(null);
-    const [isAddingNew, setIsAddingNew] = useState(false);
-    const [newItem, setNewItem] = useState<Omit<MenuItemInterface, 'id'>>({
-        name: '',
-        description: '',
-        price: 0,
-        category: 'Local Ghanaian Foods',
-        image: '', // This will store the temporary URL for preview
-        popular: false,
-        spicy: false,
-    });
-    const [isLoading, setIsLoading] = useState(false);
+    const [formData, setFormData] = useState<Omit<MenuItemInterface, 'id'>>(blankFormState);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // State to hold the actual File objects for new and edited items
-    const [selectedNewFile, setSelectedNewFile] = useState<File | null>(null);
-    const [selectedEditFile, setSelectedEditFile] = useState<File | null>(null);
-
-
-    // Cleanup Object URLs when component unmounts or state changes
     useEffect(() => {
-        return () => {
-            if (selectedNewFile && newItem.image.startsWith('blob:')) {
-                URL.revokeObjectURL(newItem.image);
-            }
-            if (selectedEditFile && editingItem?.image && editingItem.image.startsWith('blob:')) {
-                URL.revokeObjectURL(editingItem.image);
-            }
-        };
-    }, [newItem.image, editingItem?.image, selectedNewFile, selectedEditFile]);
+        // Fetch menu items when the component loads if they haven't been fetched yet
+        if (restaurantInfo && status === 'idle') {
+            dispatch(fetchMenuItems(restaurantInfo.id));
+        }
+    }, [restaurantInfo, status, dispatch]);
 
+    const handleShowAddForm = () => {
+        setEditingItem(null);
+        setFormData(blankFormState);
+        setSelectedFile(null);
+        setIsFormVisible(true);
+    };
 
     const handleEditClick = (item: MenuItemInterface) => {
-        setEditingItem({ ...item });
-        setIsAddingNew(false);
-        setSelectedEditFile(null); // Clear selected file for edit
+        setEditingItem(item);
+        setFormData(item);
+        setSelectedFile(null);
+        setIsFormVisible(true);
     };
 
-    const handleCancelEdit = () => {
-        // Revoke temporary URLs if they exist before clearing state
-        if (newItem.image.startsWith('blob:')) {
-            URL.revokeObjectURL(newItem.image);
-        }
-        if (editingItem?.image && editingItem.image.startsWith('blob:')) {
-            URL.revokeObjectURL(editingItem.image);
-        }
-
+    const handleCancel = () => {
+        setIsFormVisible(false);
         setEditingItem(null);
-        setIsAddingNew(false);
-        setNewItem({
-            name: '',
-            description: '',
-            price: 0,
-            category: 'Local Ghanaian Foods',
-            image: '',
-            popular: false,
-            spicy: false,
-        });
-        setSelectedNewFile(null);
-        setSelectedEditFile(null);
     };
 
-    const handleSaveItem = async () => {
-        if (!editingItem) return;
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+        const { name, value, type } = e.target;
+        const checked = (e.target as HTMLInputElement).checked;
 
-        setIsLoading(true);
-        let updatedImageUrl = editingItem.image; // Start with current image URL
-
-        // If a new file was selected for editing, update the image URL
-        if (selectedEditFile) {
-            // Revoke old preview URL if it was a temporary blob URL
-            if (editingItem.image.startsWith('blob:')) {
-                URL.revokeObjectURL(editingItem.image);
-            }
-            updatedImageUrl = URL.createObjectURL(selectedEditFile); // Create new temporary URL
-        } else if (!editingItem.image) {
-            alert("Please select an image for the menu item.");
-            setIsLoading(false);
-            return;
-        }
-
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-
-        // Update the editingItem state with the new image URL before saving to menuItems
-        const finalEditedItem = { ...editingItem, image: updatedImageUrl };
-        setEditingItem(finalEditedItem);
-
-        setMenuItems(prevItems =>
-            prevItems.map(item =>
-                item.id === finalEditedItem.id ? finalEditedItem : item
-            )
-        );
-        setSelectedEditFile(null);
-        setIsLoading(false);
-        alert("Menu item updated successfully!");
-    };
-
-    const handleDeleteItem = async (id: number) => {
-        if (window.confirm("Are you sure you want to delete this item?")) {
-            setIsLoading(true);
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-
-            setMenuItems(prevItems => {
-                const itemToDelete = prevItems.find(item => item.id === id);
-                if (itemToDelete && itemToDelete.image.startsWith('blob:')) {
-                    URL.revokeObjectURL(itemToDelete.image); // Revoke temporary URL
-                }
-                return prevItems.filter(item => item.id !== id);
-            });
-
-            setIsLoading(false);
-            alert("Menu item deleted successfully!");
-        }
-    };
-
-    const handleAddItem = async () => {
-        if (!newItem.name || !newItem.description || newItem.price <= 0 || !selectedNewFile) {
-            alert("Please fill in all required fields and select an image.");
-            return;
-        }
-
-        setIsLoading(true);
-        // In a real app, you'd upload selectedNewFile here and get a permanent URL
-        const tempImageUrl = URL.createObjectURL(selectedNewFile); // Use temporary URL for preview
-
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-
-        const newId = menuItems.length > 0 ? Math.max(...menuItems.map(item => item.id)) + 1 : 1;
-        setMenuItems(prevItems => [...prevItems, { ...newItem, id: newId, image: tempImageUrl }]);
-        setNewItem({
-            name: '',
-            description: '',
-            price: 0,
-            category: 'Local Ghanaian Foods',
-            image: '',
-            popular: false,
-            spicy: false,
-        });
-        setSelectedNewFile(null);
-        setIsAddingNew(false);
-        setIsLoading(false);
-        alert("Menu item added successfully!");
-    };
-
-    const handleNewItemChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        const { name, value, type, checked } = e.target as HTMLInputElement;
-        setNewItem(prev => ({
+        setFormData(prev => ({
             ...prev,
-            [name]: type === 'checkbox' ? checked : value,
+            [name]: type === 'checkbox' ? checked : (type === 'number' ? parseFloat(value) || 0 : value)
         }));
     };
 
-    const handleEditItemChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        const { name, value, type, checked } = e.target as HTMLInputElement;
-        setEditingItem(prev => ({
-            ...prev!,
-            [name]: type === 'checkbox' ? checked : value,
-        }));
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!restaurantInfo) return;
+
+        setIsSubmitting(true);
+
+        if (editingItem) {
+            // Logic to update an existing item
+            await dispatch(updateMenuItem({
+                restaurantId: restaurantInfo.id,
+                item: { ...formData, id: editingItem.id },
+                newImageFile: selectedFile
+            }));
+        } else {
+            // Logic to add a new item
+            if (!selectedFile) {
+                alert("Please select an image for the new item.");
+                setIsSubmitting(false);
+                return;
+            }
+            await dispatch(addMenuItem({
+                restaurantId: restaurantInfo.id,
+                itemData: formData,
+                imageFile: selectedFile
+            }));
+        }
+
+        setIsSubmitting(false);
+        setIsFormVisible(false);
+    };
+
+    const handleDelete = async (item: MenuItemInterface) => {
+        if (!restaurantInfo || !window.confirm(`Are you sure you want to delete "${item.name}"?`)) return;
+
+        await dispatch(deleteMenuItem({ restaurantId: restaurantInfo.id, itemId: item.id, imageUrl: item.image }));
+    };
+
+    const renderContent = () => {
+        if (status === 'loading') {
+            return <div className="flex justify-center p-10"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div></div>;
+        }
+
+        if (status === 'failed') {
+            return (
+                <div className="text-center p-10 bg-red-50 text-red-700 rounded-lg">
+                    <AlertTriangle className="mx-auto h-12 w-12 mb-4" />
+                    <h3 className="text-lg font-medium">Error</h3>
+                    <p>{error}</p>
+                </div>
+            );
+        }
+
+        if (status === 'succeeded' && menuItems.length === 0) {
+            return (
+                <div className="text-center py-16">
+                    <UtensilsCrossed className="mx-auto h-16 w-16 text-gray-300 mb-4" />
+                    <h3 className="text-xl font-semibold text-gray-800">Your menu is empty</h3>
+                    <p className="text-gray-500 mt-2">Click &quot;Add New Item&quot; to get started!</p>
+                </div>
+            );
+        }
+
+        return (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {menuItems.map(item => (
+                    <div key={item.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm transition-shadow hover:shadow-md">
+                        <div className="relative">
+                            <Image src={item.image} alt={item.name} width={300} height={200} className="w-full h-48 object-cover" />
+                            {item.popular && <div className="absolute top-2 left-2 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full">POPULAR</div>}
+                        </div>
+                        <div className="p-4">
+                            <div className="flex justify-between items-start">
+                                <h3 className="font-semibold text-gray-900 text-lg">{item.name}</h3>
+                                {item.spicy && <span title="Spicy">🌶️</span>}
+                            </div>
+                            <p className="text-gray-600 text-sm mb-2 line-clamp-2 h-10">{item.description}</p>
+                            <div className="flex items-center justify-between mt-4">
+                                <div className="text-xl font-bold text-gray-900">₵{item.price.toFixed(2)}</div>
+                                <div className="flex space-x-2">
+                                    <button onClick={() => handleEditClick(item)} className="p-2 rounded-full text-gray-500 hover:bg-gray-100"><Edit className="w-5 h-5" /></button>
+                                    <button onClick={() => handleDelete(item)} className="p-2 rounded-full text-red-500 hover:bg-red-100"><Trash2 className="w-5 h-5" /></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        );
     };
 
     return (
         <div className="min-h-screen bg-gray-50">
-            {/* Header */}
-            <div className="bg-white shadow-sm border-b">
+            <div className="bg-white shadow-sm border-b sticky top-0 z-20">
                 <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                        <ChefHat className="w-6 h-6 text-orange-600" />
-                        <h1 className="text-xl font-bold text-gray-900">Manage Menu</h1>
-                    </div>
-                    <Link href="/dashboard/restaurant-info" className="text-orange-600 hover:text-orange-700 text-sm font-medium">
-                        Back to Dashboard
-                    </Link>
+                    <h1 className="text-xl font-bold text-gray-900 flex items-center"><ChefHat className="w-6 h-6 text-orange-600 mr-2" />Manage Menu</h1>
+                    <Link href="/dashboard/restaurant-info" className="text-sm font-semibold text-orange-600 hover:underline">Back to Dashboard</Link>
                 </div>
             </div>
 
             <div className="max-w-6xl mx-auto px-4 py-8">
                 <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-3xl font-bold text-gray-900">Your Menu Items</h2>
-                    <button
-                        onClick={() => {
-                            setIsAddingNew(true);
-                            setEditingItem(null);
-                            setNewItem({
-                                name: '',
-                                description: '',
-                                price: 0,
-                                category: 'Local Ghanaian Foods',
-                                image: '',
-                                popular: false,
-                                spicy: false,
-                            });
-                            setSelectedNewFile(null); // Reset file selection for new item
-                        }}
-                        className="bg-orange-600 text-white px-5 py-2 rounded-lg hover:bg-orange-700 transition-colors font-semibold flex items-center"
-                    >
-                        <PlusCircle className="mr-2 w-5 h-5" /> Add New Item
-                    </button>
+                    <h2 className="text-3xl font-bold text-gray-800">Your Menu Items</h2>
+                    {!isFormVisible && <button onClick={handleShowAddForm} className="bg-orange-600 text-white px-5 py-2 rounded-lg hover:bg-orange-700 font-semibold flex items-center shadow-sm"><PlusCircle className="mr-2 w-5 h-5" /> Add New Item</button>}
                 </div>
 
-                {isAddingNew && (
-                    <div className="bg-white rounded-lg shadow-md p-6 mb-8 border border-orange-200">
-                        <h3 className="text-xl font-semibold text-gray-900 mb-4">Add New Menu Item</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Item Name</label>
-                                <input
-                                    type="text"
-                                    name="name"
-                                    value={newItem.name}
-                                    onChange={handleNewItemChange}
-                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Price (₵)</label>
-                                <input
-                                    type="number"
-                                    name="price"
-                                    value={newItem.price}
-                                    onChange={handleNewItemChange}
-                                    step="0.01"
-                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500"
-                                />
-                            </div>
+                {isFormVisible && (
+                    <div className="bg-white rounded-lg shadow-lg p-6 mb-8 border">
+                        <h3 className="text-xl font-semibold text-gray-900 mb-4">{editingItem ? 'Edit Menu Item' : 'Add New Menu Item'}</h3>
+                        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <input name="name" value={formData.name} onChange={handleChange} placeholder="Item Name" required className="p-2 border rounded-md" />
+                            <input name="price" type="number" step="0.01" value={formData.price} onChange={handleChange} placeholder="Price (₵)" required className="p-2 border rounded-md" />
+                            <textarea name="description" value={formData.description} onChange={handleChange} placeholder="Description" required className="p-2 border rounded-md md:col-span-2" rows={3} />
+                            <select name="category" value={formData.category} onChange={handleChange} className="p-2 border rounded-md">
+                                <option value="Local Ghanaian Foods">Local Ghanaian Foods</option>
+                                <option value="Foreign Foods">Foreign Foods</option>
+                            </select>
                             <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700">Description</label>
-                                <textarea
-                                    name="description"
-                                    value={newItem.description}
-                                    onChange={handleNewItemChange}
-                                    rows={3}
-                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500"
-                                ></textarea>
+                                <ImageUploadInput maxFiles={1} onImagesSelected={(files) => setSelectedFile(files.length > 0 ? files[0] : null)} currentImages={editingItem ? [editingItem.image] : []} />
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Category</label>
-                                <select
-                                    name="category"
-                                    value={newItem.category}
-                                    onChange={handleNewItemChange}
-                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500"
-                                >
-                                    <option value="Local Ghanaian Foods">Local Ghanaian Foods</option>
-                                    <option value="Foreign Foods">Foreign Foods</option>
-                                </select>
+                            <div className="flex items-center space-x-4">
+                                <label className="flex items-center"><input name="popular" type="checkbox" checked={formData.popular} onChange={handleChange} className="h-4 w-4 rounded mr-2" />Popular</label>
+                                <label className="flex items-center"><input name="spicy" type="checkbox" checked={formData.spicy} onChange={handleChange} className="h-4 w-4 rounded mr-2" />Spicy</label>
                             </div>
-                            {/* Image Upload Input for new item */}
-                            <div className="md:col-span-2">
-                                <ImageUploadInput
-                                    maxFiles={3} // Assuming only one image per menu item
-                                    onImagesSelected={(files) => {
-                                        if (files.length > 0) {
-                                            setSelectedNewFile(files[0]);
-                                            setNewItem(prev => ({ ...prev, image: URL.createObjectURL(files[0]) }));
-                                        } else {
-                                            setSelectedNewFile(null);
-                                            setNewItem(prev => ({ ...prev, image: '' }));
-                                        }
-                                    }}
-                                />
+                            <div className="md:col-span-2 flex justify-end space-x-3 mt-4">
+                                <button type="button" onClick={handleCancel} className="px-4 py-2 bg-gray-200 rounded-md font-semibold hover:bg-gray-300">Cancel</button>
+                                <button type="submit" disabled={isSubmitting} className="px-4 py-2 bg-green-600 text-white rounded-md font-semibold disabled:opacity-50 flex items-center">
+                                    {isSubmitting ? 'Saving...' : <><Save className="w-4 h-4 mr-2 inline" />{editingItem ? 'Save Changes' : 'Add Item'}</>}
+                                </button>
                             </div>
-                            <div className="flex items-center space-x-4 md:col-span-2">
-                                <div className="flex items-center">
-                                    <input
-                                        id="popular"
-                                        name="popular"
-                                        type="checkbox"
-                                        checked={newItem.popular}
-                                        onChange={handleNewItemChange}
-                                        className="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
-                                    />
-                                    <label htmlFor="popular" className="ml-2 block text-sm text-gray-900">Popular</label>
-                                </div>
-                                <div className="flex items-center">
-                                    <input
-                                        id="spicy"
-                                        name="spicy"
-                                        type="checkbox"
-                                        checked={newItem.spicy}
-                                        onChange={handleNewItemChange}
-                                        className="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
-                                    />
-                                    <label htmlFor="spicy" className="ml-2 block text-sm text-gray-900">Spicy</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="mt-6 flex justify-end space-x-3">
-                            <button
-                                onClick={handleCancelEdit}
-                                className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-                                disabled={isLoading}
-                            >
-                                <XCircle className="mr-2 w-4 h-4 inline" /> Cancel
-                            </button>
-                            <button
-                                onClick={handleAddItem}
-                                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50"
-                                disabled={isLoading}
-                            >
-                                {isLoading ? 'Adding...' : <><PlusCircle className="mr-2 w-4 h-4 inline" /> Add Item</>}
-                            </button>
-                        </div>
+                        </form>
                     </div>
                 )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {menuItems.length === 0 && !isAddingNew ? (
-                        <div className="col-span-full text-center py-10">
-                            <p className="text-gray-600">No menu items added yet. Click &quot;Add New Item&quot; to get started!</p>
-                        </div>
-                    ) : (
-                        menuItems.map(item => (
-                            <div key={item.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
-                                {editingItem?.id === item.id ? (
-                                    // Edit form for the item
-                                    <div className="p-4">
-                                        <h3 className="font-semibold text-gray-900 text-lg mb-2">Edit Item</h3>
-                                        <div className="space-y-3">
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700">Name</label>
-                                                <input type="text" name="name" value={editingItem.name} onChange={handleEditItemChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-1 px-2" />
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700">Price (₵)</label>
-                                                <input type="number" name="price" value={editingItem.price} onChange={handleEditItemChange} step="0.01" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-1 px-2" />
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700">Description</label>
-                                                <textarea name="description" value={editingItem.description} onChange={handleEditItemChange} rows={2} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-1 px-2"></textarea>
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700">Category</label>
-                                                <select
-                                                    name="category"
-                                                    value={editingItem.category}
-                                                    onChange={handleEditItemChange}
-                                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-1 px-2"
-                                                >
-                                                    <option value="Local Ghanaian Foods">Local Ghanaian Foods</option>
-                                                    <option value="Foreign Foods">Foreign Foods</option>
-                                                </select>
-                                            </div>
-                                            {/* Image Upload Input for editing item */}
-                                            <div>
-                                                <ImageUploadInput
-                                                    maxFiles={1}
-                                                    currentImages={editingItem ? [editingItem.image] : []} // Pass existing image URL
-                                                    onImagesSelected={(files) => {
-                                                        if (files.length > 0) {
-                                                            setSelectedEditFile(files[0]);
-                                                            // Temporarily update image for preview
-                                                            setEditingItem(prev => prev ? ({ ...prev, image: URL.createObjectURL(files[0]) }) : null);
-                                                        } else {
-                                                            setSelectedEditFile(null);
-                                                            // If all files removed, clear the image.
-                                                            setEditingItem(prev => prev ? ({ ...prev, image: '' }) : null);
-                                                        }
-                                                    }}
-                                                />
-                                            </div>
-                                            <div className="flex items-center space-x-4">
-                                                <div className="flex items-center">
-                                                    <input type="checkbox" id={`popular-${item.id}`} name="popular" checked={editingItem.popular} onChange={handleEditItemChange} className="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500" />
-                                                    <label htmlFor={`popular-${item.id}`} className="ml-2 block text-sm text-gray-900">Popular</label>
-                                                </div>
-                                                <div className="flex items-center">
-                                                    <input type="checkbox" id={`spicy-${item.id}`} name="spicy" checked={editingItem.spicy} onChange={handleEditItemChange} className="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500" />
-                                                    <label htmlFor={`spicy-${item.id}`} className="ml-2 block text-sm text-gray-900">Spicy</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="mt-4 flex justify-end space-x-3">
-                                            <button
-                                                onClick={handleSaveItem}
-                                                className="px-3 py-1 bg-orange-600 text-white rounded-md text-sm font-medium hover:bg-orange-700 disabled:opacity-50"
-                                                disabled={isLoading}
-                                            >
-                                                {isLoading ? 'Saving...' : <><Save className="mr-2 w-4 h-4" />Save</>}
-                                            </button>
-                                            <button
-                                                onClick={handleCancelEdit}
-                                                className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-                                                disabled={isLoading}
-                                            >
-                                                Cancel
-                                            </button>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    // Display item details
-                                    <>
-                                        <div className="relative">
-                                            <Image
-                                                src={item.image}
-                                                alt={item.name}
-                                                width={300}
-                                                height={200}
-                                                className="w-full h-48 object-cover"
-                                                unoptimized={item.image.startsWith('blob:')} // Add unoptimized prop for blob URLs
-                                            />
-                                            {item.popular && (
-                                                <div className="absolute top-3 left-3 bg-orange-600 text-white px-2 py-1 rounded-full text-xs font-medium">
-                                                    Popular
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="p-4">
-                                            <div className="flex justify-between items-start mb-2">
-                                                <h3 className="font-semibold text-gray-900 text-lg">{item.name}</h3>
-                                                {item.spicy && (
-                                                    <span className="text-red-500 text-sm">🌶️</span>
-                                                )}
-                                            </div>
-                                            <p className="text-gray-600 text-sm mb-2 line-clamp-2">{item.description}</p>
-                                            <p className="text-gray-500 text-xs mb-4">Category: {item.category}</p>
-
-                                            <div className="flex items-center justify-between">
-                                                <div className="text-xl font-bold text-gray-900">
-                                                    ₵{item.price}
-                                                </div>
-                                                <div className="flex space-x-2">
-                                                    <button
-                                                        onClick={() => handleEditClick(item)}
-                                                        className="p-2 rounded-full text-gray-600 hover:bg-gray-100"
-                                                    >
-                                                        <Edit className="w-5 h-5" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDeleteItem(item.id)}
-                                                        className="p-2 rounded-full text-red-600 hover:bg-red-50"
-                                                        disabled={isLoading}
-                                                    >
-                                                        <Trash2 className="w-5 h-5" />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-                        ))
-                    )}
-                </div>
+                {renderContent()}
             </div>
         </div>
     );
