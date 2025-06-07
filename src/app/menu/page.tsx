@@ -38,7 +38,7 @@ const Menu = () => {
 
     const menuItems: Array<MenuItemInterface> = [
         {
-            id: 1,
+            id: "1",
             name: "Jollof Rice with Chicken",
             description: "Aromatic rice cooked in rich tomato sauce with tender grilled chicken",
             price: 25.00,
@@ -48,7 +48,7 @@ const Menu = () => {
             spicy: true
         },
         {
-            id: 2,
+            id: "2",
             name: "Banku with Tilapia",
             description: "Traditional fermented corn dough served with grilled tilapia and pepper sauce",
             price: 30.00,
@@ -58,7 +58,7 @@ const Menu = () => {
             spicy: true
         },
         {
-            id: 3,
+            id: "3",
             name: "Fufu with Light Soup",
             description: "Pounded cassava and plantain served with aromatic light soup and goat meat",
             price: 28.00,
@@ -68,7 +68,7 @@ const Menu = () => {
             spicy: false
         },
         {
-            id: 4,
+            id: "4",
             name: "Kelewele",
             description: "Spiced fried plantain cubes with ginger and chili",
             price: 12.00,
@@ -78,7 +78,7 @@ const Menu = () => {
             spicy: true
         },
         {
-            id: 5,
+            id: "5",
             name: "Palm Nut Soup",
             description: "Rich palm nut soup with assorted meat and fish",
             price: 35.00,
@@ -88,7 +88,7 @@ const Menu = () => {
             spicy: false
         },
         {
-            id: 6,
+            id: "6",
             name: "Sobolo",
             description: "Refreshing hibiscus drink with ginger and pineapple",
             price: 8.00,
