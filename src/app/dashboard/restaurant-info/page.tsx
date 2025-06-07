@@ -1,7 +1,7 @@
 // src/app/dashboard/restaurant-info/page.tsx
 'use client';
 import React, { useState, useEffect } from 'react';
-import { ChefHat, Star, Clock, Truck, Edit, Save, XCircle } from 'lucide-react';
+import { ChefHat, Star, MapPin, Clock, Truck, Edit, Save, XCircle } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -53,6 +53,12 @@ const RestaurantInfoPage = () => {
         setIsEditing(false);
         setIsLoading(false);
         alert("Restaurant information saved successfully!");
+    };
+
+    const generateMapUrl = (location: string) => {
+        // Encode the location for use in a URL
+        const encodedLocation = encodeURIComponent(location);
+        return `https://www.google.com/maps/search/?api=1&query=${encodedLocation}`;
     };
 
     return (
@@ -170,7 +176,15 @@ const RestaurantInfoPage = () => {
                                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
                                     />
                                 ) : (
-                                    <p className="mt-1 text-lg text-gray-900">{restaurant.location}</p>
+                                    <a
+                                        href={generateMapUrl(restaurant.location)}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="mt-1 text-lg text-gray-900 flex items-center hover:text-orange-600 transition-colors"
+                                    >
+                                        <MapPin className="w-5 h-5 mr-2 text-gray-500" />
+                                        {restaurant.location}
+                                    </a>
                                 )}
                             </div>
                             <div className="md:col-span-2">
@@ -283,10 +297,13 @@ const RestaurantInfoPage = () => {
                     </div>
                 </div>
 
-                {/* Link to Menu Management Page */}
-                <div className="mt-8 text-center">
-                    <Link href="/dashboard/menu-management" className="bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700 transition-colors font-semibold text-lg">
+                {/* Dashboard Navigation Links */}
+                <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Link href="/dashboard/menu-management" className="bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700 transition-colors font-semibold text-lg text-center">
                         Manage Your Menu
+                    </Link>
+                    <Link href="/dashboard/order-management" className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold text-lg text-center">
+                        Manage Orders
                     </Link>
                 </div>
             </div>

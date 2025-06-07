@@ -1,10 +1,12 @@
+// src/app/menu/page.tsx
 'use client'
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Search, Star, Clock, Filter, ArrowLeft, ChefHat, ShoppingCart,  MapPin } from 'lucide-react';
+import { Search, Star, Clock, Filter, ArrowLeft, ChefHat, ShoppingCart, MapPin } from 'lucide-react';
 import Link from 'next/link';
 import { MenuItemInterface } from '@/interfaces/ItemInfoInterface';
+import MenuItem from '@/components/MenuItem'; // Ensure this import is correct and used
 
 const Menu = () => {
     const router = useRouter()
@@ -128,7 +130,7 @@ const Menu = () => {
                             <h1 className="text-xl font-bold text-gray-900">Menu</h1>
                         </div>
                     </div>
-                    <Link href={'/cart'}  className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                    <Link href={'/cart'} className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
                         <ShoppingCart className="w-6 h-6 text-gray-600" />
                         {cartCount > 0 && (
                             <span className="absolute -top-1 -right-1 bg-orange-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
@@ -172,7 +174,7 @@ const Menu = () => {
                                     <span>Delivery {restaurant.deliveryFee}</span>
                                 </div>
                             </div>
-                            
+
                         </div>
                     </div>
                 </div>
@@ -212,8 +214,8 @@ const Menu = () => {
                             key={category.id}
                             onClick={() => setSelectedCategory(category.id)}
                             className={`px-4 py-2 rounded-full whitespace-nowrap text-sm font-medium transition-colors ${selectedCategory === category.id
-                                    ? 'bg-orange-600 text-white'
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                ? 'bg-orange-600 text-white'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                 }`}
                         >
                             {category.name} ({category.count})
@@ -222,10 +224,6 @@ const Menu = () => {
                 </div>
             </div>
         </div>
-    );
-
-    const MenuItem = ({ item }: { item: typeof menuItems[0] }) => (
-        <MenuItem item={item} key={item.id}/>
     );
 
     return (
