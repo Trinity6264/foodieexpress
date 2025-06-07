@@ -1,13 +1,16 @@
 import { configureStore } from '@reduxjs/toolkit';
-// Import your reducers here later, e.g., import restaurantReducer from './features/restaurantSlice';
-
+import authReducer from './features/authSlice'; // Import the new reducer
 export const makeStore = () => {
     return configureStore({
         reducer: {
             // Add your slices here
-            // restaurant: restaurantReducer,
+            auth: authReducer,
         },
         // Add any middleware here if needed
+        middleware: (getDefaultMiddleware) =>
+            getDefaultMiddleware({
+                serializableCheck: false,
+            }),
     });
 };
 
