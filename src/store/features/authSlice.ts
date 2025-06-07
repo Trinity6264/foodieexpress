@@ -1,6 +1,6 @@
 // src/store/features/authSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { auth } from '@/firebase/init';
+import { auth } from '@/firebase/init'; //
 import { signInWithEmailAndPassword, User } from 'firebase/auth';
 
 // Define a type for the slice state
@@ -23,16 +23,32 @@ export const loginUser = createAsyncThunk(
     async ({ email, password }: { email: string, password: string }, { rejectWithValue }) => {
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            // The user object contains all the user data
-            // You may want to serialize it before putting it in the store
             return JSON.parse(JSON.stringify(userCredential.user));
         } catch (error: unknown) {
-            // Use rejectWithValue to return a custom error payload
-            let message = 'An unknown error occurred';
-            if (error instanceof Error) {
-                message = error.message;
+            // --- Start of Changes ---
+            let errorMessage = "An unknown error occurred.";
+            if (typeof error === 'object' && error !== null && 'code' in error) {
+                const errorCode = (error as { code: string }).code;
+                switch (errorCode) {
+                    case 'auth/invalid-credential':
+                        errorMessage = "Invalid email or password. Please try again.";
+                        break;
+                    case 'auth/user-not-found':
+                        errorMessage = "No account found with this email address.";
+                        break;
+                    case 'auth/wrong-password':
+                        errorMessage = "Incorrect password. Please try again.";
+                        break;
+                    case 'auth/too-many-requests':
+                        errorMessage = "Access to this account has been temporarily disabled due to many failed login attempts. You can immediately restore it by resetting your password or you can try again later.";
+                        break;
+                    default:
+                        errorMessage = "Failed to login. Please try again later.";
+                        break;
+                }
             }
-            return rejectWithValue(message);
+            return rejectWithValue(errorMessage);
+            // --- End of Changes ---
         }
     }
 );
@@ -41,7 +57,6 @@ export const authSlice = createSlice({
     name: 'auth',
     initialState,
     reducers: {
-        // Standard reducers can go here if needed
         logout: (state) => {
             state.user = null;
             auth.signOut();

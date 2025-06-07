@@ -1,9 +1,11 @@
 // src/components/AuthForm.tsx
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Mail, Lock, LogIn, UserPlus } from 'lucide-react';
+import { Mail, Lock, LogIn, UserPlus, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
+import { loginUser } from '@/store/features/authSlice';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
 
 interface AuthFormProps {
     isSignUp: boolean;
@@ -13,31 +15,31 @@ const AuthForm = ({ isSignUp }: AuthFormProps) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
+
+    const dispatch = useAppDispatch();
+    const { user, isLoading, error } = useAppSelector((state) => state.auth);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setIsLoading(true);
-
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1500));
-
         if (isSignUp) {
             if (password !== confirmPassword) {
                 alert("Passwords do not match!");
-                setIsLoading(false);
                 return;
             }
-            alert(`Sign Up successful for ${email}! (Simulated)`);
-            router.push('/restaurant-setup'); // Redirect to new onboarding page after signup
+            // You can create a signUpUser thunk similar to loginUser
+            console.log(`Sign Up for ${email}`);
         } else {
-            alert(`Logged in as ${email}! (Simulated)`);
-            // Redirect to the new restaurant dashboard page
+            dispatch(loginUser({ email, password }));
+        }
+    };
+
+    useEffect(() => {
+        if (user) {
             router.push('/dashboard/restaurant-info');
         }
-        setIsLoading(false);
-    };
+    }, [user, router]);
+
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
@@ -55,6 +57,12 @@ const AuthForm = ({ isSignUp }: AuthFormProps) => {
                     </p>
                 </div>
                 <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+                    {error && (
+                        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                            <strong className="font-bold"><AlertCircle className="inline-block mr-2" /></strong>
+                            <span className="block sm:inline">{error}</span>
+                        </div>
+                    )}
                     <div className="rounded-md shadow-sm">
                         <div className="relative mb-4">
                             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
