@@ -184,7 +184,7 @@ const MenuManagementPage = () => {
                                 <option value="Foreign Foods">Foreign Foods</option>
                             </select>
                             <div className="md:col-span-2">
-                                <ImageUploadInput maxFiles={1} onImagesSelected={(files) => setSelectedFile(files.length > 0 ? files[0] : null)} currentImages={editingItem ? [editingItem.image] : []} />
+                                <ImageUploadInput maxFiles={3} onImagesSelected={(files) => setSelectedFile(files.length > 0 ? files[0] : null)} currentImages={editingItem ? [editingItem.image] : []} />
                             </div>
                             <div className="flex items-center space-x-4">
                                 <label className="flex items-center"><input name="popular" type="checkbox" checked={formData.popular} onChange={handleChange} className="h-4 w-4 rounded mr-2" />Popular</label>
