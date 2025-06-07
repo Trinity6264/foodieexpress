@@ -5,7 +5,7 @@ import RestaurantCard from '../RestaurantCard';
 const FeaturedRestaurantSection = () => {
     const featuredRestaurants: Array<RestaurantInfoInterface> = [
             {
-                id: 1,
+                id: "1",
                 name: "Mama's Kitchen",
                 cuisine: "Local Ghanaian",
                 rating: 4.8,
@@ -15,10 +15,15 @@ const FeaturedRestaurantSection = () => {
                 specialty: "Authentic Jollof Rice",
                 location: "Accra Central",
                 featured: true,
-                minOrder: "₵20.00"
+                minOrder: "₵20.00",
+                userId: '',
+                phone: '',
+                address: '',
+                description: '',
+                isOpen: false
             },
             {
-                id: 2,
+                id: "2",
                 name: "Dragon Palace",
                 cuisine: "Chinese",
                 rating: 4.6,
@@ -28,10 +33,15 @@ const FeaturedRestaurantSection = () => {
                 specialty: "Dim Sum & Noodles",
                 location: "East Legon",
                 featured: false,
-                minOrder: "₵35.00"
+                minOrder: "₵35.00",
+                userId: '',
+                phone: '',
+                address: '',
+                description: '',
+                isOpen: false
             },
             {
-                id: 3,
+                id: "3",
                 name: "Pizza Corner",
                 cuisine: "Italian",
                 rating: 4.7,
@@ -41,10 +51,15 @@ const FeaturedRestaurantSection = () => {
                 specialty: "Wood-fired Pizza",
                 location: "Osu",
                 featured: true,
-                minOrder: "₵25.00"
+                minOrder: "₵25.00",
+                userId: '',
+                phone: '',
+                address: '',
+                description: '',
+                isOpen: false
             },
             {
-                id: 4,
+                id: "4",
                 name: "Spice Route",
                 cuisine: "Indian",
                 rating: 4.5,
@@ -54,7 +69,12 @@ const FeaturedRestaurantSection = () => {
                 specialty: "Authentic Biryani",
                 location: "Cantonments",
                 featured: false,
-                minOrder: "₵40.00"
+                minOrder: "₵40.00",
+                userId: '',
+                phone: '',
+                address: '',
+                description: '',
+                isOpen: false
             },
         ];
     
