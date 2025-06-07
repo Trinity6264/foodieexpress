@@ -14,7 +14,7 @@ const RestaurantsPage = () => {
 
     const allRestaurants: Array<RestaurantInfoInterface> = [
         {
-            id: 1,
+            id: "1",
             name: "Mama's Kitchen",
             cuisine: "Local Ghanaian",
             rating: 4.8,
@@ -24,10 +24,15 @@ const RestaurantsPage = () => {
             specialty: "Authentic Jollof Rice",
             location: "Accra Central",
             featured: true,
-            minOrder: "₵20.00"
+            minOrder: "₵20.00",
+            userId: '',
+            phone: '',
+            address: '',
+            description: '',
+            isOpen: false
         },
         {
-            id: 2,
+            id: "2",
             name: "Dragon Palace",
             cuisine: "Chinese",
             rating: 4.6,
@@ -37,10 +42,15 @@ const RestaurantsPage = () => {
             specialty: "Dim Sum & Noodles",
             location: "East Legon",
             featured: false,
-            minOrder: "₵35.00"
+            minOrder: "₵35.00",
+            userId: '',
+            phone: '',
+            address: '',
+            description: '',
+            isOpen: false
         },
         {
-            id: 3,
+            id: "3",
             name: "Pizza Corner",
             cuisine: "Italian",
             rating: 4.7,
@@ -50,10 +60,15 @@ const RestaurantsPage = () => {
             specialty: "Wood-fired Pizza",
             location: "Osu",
             featured: true,
-            minOrder: "₵25.00"
+            minOrder: "₵25.00",
+            userId: '',
+            phone: '',
+            address: '',
+            description: '',
+            isOpen: false
         },
         {
-            id: 4,
+            id: "4",
             name: "Spice Route",
             cuisine: "Indian",
             rating: 4.5,
@@ -63,10 +78,15 @@ const RestaurantsPage = () => {
             specialty: "Authentic Biryani",
             location: "Cantonments",
             featured: false,
-            minOrder: "₵40.00"
+            minOrder: "₵40.00",
+            userId: '',
+            phone: '',
+            address: '',
+            description: '',
+            isOpen: false
         },
         {
-            id: 5,
+            id: "5",
             name: "Burger Junction",
             cuisine: "American",
             rating: 4.4,
@@ -76,10 +96,15 @@ const RestaurantsPage = () => {
             specialty: "Gourmet Burgers",
             location: "Airport Residential",
             featured: false,
-            minOrder: "₵15.00"
+            minOrder: "₵15.00",
+            userId: '',
+            phone: '',
+            address: '',
+            description: '',
+            isOpen: false
         },
         {
-            id: 6,
+            id: "6",
             name: "Sushi Zen",
             cuisine: "Japanese",
             rating: 4.9,
@@ -89,10 +114,15 @@ const RestaurantsPage = () => {
             specialty: "Fresh Sushi & Sashimi",
             location: "Cantonments",
             featured: true,
-            minOrder: "₵50.00"
+            minOrder: "₵50.00",
+            userId: '',
+            phone: '',
+            address: '',
+            description: '',
+            isOpen: false
         },
         {
-            id: 7,
+            id: "7",
             name: "Taco Fiesta",
             cuisine: "Mexican",
             rating: 4.3,
@@ -102,10 +132,15 @@ const RestaurantsPage = () => {
             specialty: "Authentic Tacos",
             location: "Labone",
             featured: false,
-            minOrder: "₵30.00"
+            minOrder: "₵30.00",
+            userId: '',
+            phone: '',
+            address: '',
+            description: '',
+            isOpen: false
         },
         {
-            id: 8,
+            id: "8",
             name: "Auntie Mercy's Spot",
             cuisine: "Local Ghanaian",
             rating: 4.6,
@@ -115,10 +150,15 @@ const RestaurantsPage = () => {
             specialty: "Banku & Tilapia",
             location: "Tema",
             featured: false,
-            minOrder: "₵18.00"
+            minOrder: "₵18.00",
+            userId: '',
+            phone: '',
+            address: '',
+            description: '',
+            isOpen: false
         },
         {
-            id: 9,
+            id: "9",
             name: "The Grill House",
             cuisine: "BBQ",
             rating: 4.7,
@@ -128,10 +168,15 @@ const RestaurantsPage = () => {
             specialty: "Grilled Meats & Seafood",
             location: "Ridge",
             featured: true,
-            minOrder: "₵35.00"
+            minOrder: "₵35.00",
+            userId: '',
+            phone: '',
+            address: '',
+            description: '',
+            isOpen: false
         },
         {
-            id: 10,
+            id: "10",
             name: "Pasta Villa",
             cuisine: "Italian",
             rating: 4.2,
@@ -141,10 +186,15 @@ const RestaurantsPage = () => {
             specialty: "Fresh Pasta & Risotto",
             location: "Airport Residential",
             featured: false,
-            minOrder: "₵28.00"
+            minOrder: "₵28.00",
+            userId: '',
+            phone: '',
+            address: '',
+            description: '',
+            isOpen: false
         },
         {
-            id: 11,
+            id: "11",
             name: "Kofi's Chop Bar",
             cuisine: "Local Ghanaian",
             rating: 4.5,
@@ -154,10 +204,15 @@ const RestaurantsPage = () => {
             specialty: "Waakye & Kelewele",
             location: "Circle",
             featured: false,
-            minOrder: "₵12.00"
+            minOrder: "₵12.00",
+            userId: '',
+            phone: '',
+            address: '',
+            description: '',
+            isOpen: false
         },
         {
-            id: 12,
+            id: "12",
             name: "Mediterranean Delight",
             cuisine: "Mediterranean",
             rating: 4.8,
@@ -167,7 +222,12 @@ const RestaurantsPage = () => {
             specialty: "Hummus & Grilled Meats",
             location: "East Legon",
             featured: true,
-            minOrder: "₵45.00"
+            minOrder: "₵45.00",
+            userId: '',
+            phone: '',
+            address: '',
+            description: '',
+            isOpen: false
         }
     ];
 
