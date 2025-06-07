@@ -1,6 +1,8 @@
+// src/components/Header.tsx
 'use client'
 import { ChefHat, Menu, X } from "lucide-react"
 import { useState } from "react";
+import Link from "next/link";
 
 const Header = () => {
     const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
@@ -17,20 +19,20 @@ const Header = () => {
                     </div>
 
                     <nav className="hidden md:flex space-x-8">
-                        <a href="#home" className="text-gray-700 hover:text-orange-600 font-medium transition-colors">Home</a>
-                        <a href="#restaurants" className="text-gray-700 hover:text-orange-600 font-medium transition-colors">Restaurants</a>
-                        <a href="#features" className="text-gray-700 hover:text-orange-600 font-medium transition-colors">Features</a>
-                        <a href="#about" className="text-gray-700 hover:text-orange-600 font-medium transition-colors">About</a>
-                        <a href="#contact" className="text-gray-700 hover:text-orange-600 font-medium transition-colors">Contact</a>
+                        <Link href="#home" className="text-gray-700 hover:text-orange-600 font-medium transition-colors">Home</Link>
+                        <Link href="#restaurants" className="text-gray-700 hover:text-orange-600 font-medium transition-colors">Restaurants</Link>
+                        <Link href="#features" className="text-gray-700 hover:text-orange-600 font-medium transition-colors">Features</Link>
+                        <Link href="#about" className="text-gray-700 hover:text-orange-600 font-medium transition-colors">About</Link>
+                        <Link href="#contact" className="text-gray-700 hover:text-orange-600 font-medium transition-colors">Contact</Link>
                     </nav>
 
                     <div className="hidden md:flex items-center space-x-4">
-                        <button className="text-gray-700 hover:text-orange-600 font-medium transition-colors">
+                        <Link href="/login" className="text-gray-700 hover:text-orange-600 font-medium transition-colors">
                             Sign In
-                        </button>
-                        <button className="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition-colors font-medium">
+                        </Link>
+                        <Link href="/signup" className="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition-colors font-medium">
                             Get Started
-                        </button>
+                        </Link>
                     </div>
 
                     <button
@@ -45,16 +47,16 @@ const Header = () => {
                 {isMenuOpen && (
                     <div className="md:hidden bg-white border-t border-gray-200 py-4">
                         <div className="flex flex-col space-y-4">
-                            <a href="#home" className="text-gray-700 hover:text-orange-600 font-medium">Home</a>
-                            <a href="#restaurants" className="text-gray-700 hover:text-orange-600 font-medium">Restaurants</a>
-                            <a href="#features" className="text-gray-700 hover:text-orange-600 font-medium">Features</a>
-                            <a href="#about" className="text-gray-700 hover:text-orange-600 font-medium">About</a>
-                            <a href="#contact" className="text-gray-700 hover:text-orange-600 font-medium">Contact</a>
+                            <Link href="#home" className="text-gray-700 hover:text-orange-600 font-medium">Home</Link>
+                            <Link href="#restaurants" className="text-gray-700 hover:text-orange-600 font-medium">Restaurants</Link>
+                            <Link href="#features" className="text-gray-700 hover:text-orange-600 font-medium">Features</Link>
+                            <Link href="#about" className="text-gray-700 hover:text-orange-600 font-medium">About</Link>
+                            <Link href="#contact" className="text-gray-700 hover:text-orange-600 font-medium">Contact</Link>
                             <div className="flex flex-col space-y-2 pt-4 border-t border-gray-200">
-                                <button className="text-gray-700 hover:text-orange-600 font-medium text-left">Sign In</button>
-                                <button className="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition-colors font-medium">
+                                <Link href="/login" className="text-gray-700 hover:text-orange-600 font-medium text-left">Sign In</Link>
+                                <Link href="/signup" className="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition-colors font-medium text-left">
                                     Get Started
-                                </button>
+                                </Link>
                             </div>
                         </div>
                     </div>
