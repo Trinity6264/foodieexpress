@@ -21,6 +21,37 @@ interface EditItemProps {
     rows?: number;
 }
 
+
+
+const DetailItem = ({ icon, label, value }: { icon: React.ReactNode, label: string, value: string | number | boolean }) => (
+    // ... implementation remains the same
+    <div>
+        <label className="text-sm font-medium text-gray-500 flex items-center">
+            {icon}
+            <span className="ml-2">{label}</span>
+        </label>
+        <p className="mt-1 text-lg text-gray-900">{String(value)}</p>
+    </div>
+);
+
+// Use the new EditItemProps interface here
+const EditItem = ({ label, name, value, onChange, type = "text", rows = 1 }: EditItemProps) => (
+    <div className={type === 'textarea' ? 'md:col-span-2' : ''}>
+        <label htmlFor={name} className="block text-sm font-medium text-gray-700">{label}</label>
+        {type === 'textarea' ? (
+            <textarea id={name} name={name} value={String(value)} onChange={onChange} rows={rows} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 text-black px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500" />
+        ) : type === 'checkbox' ? (
+            <div className="mt-2">
+                <input id={name} name={name} type="checkbox" checked={Boolean(value)} onChange={onChange} className="h-5 w-5 rounded border-gray-300 text-orange-600 focus:ring-orange-500" />
+            </div>
+        ) : (
+            <input id={name} name={name} type={type} value={String(value)} onChange={onChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none text-black focus:ring-orange-500 focus:border-orange-500" />
+        )}
+    </div>
+);
+
+
+
 const RestaurantInfoPage = () => {
     const router = useRouter();
     const dispatch = useAppDispatch();
@@ -47,7 +78,9 @@ const RestaurantInfoPage = () => {
         }
     };
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleChange = (
+        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    ) => {
         if (!editedData) return;
         const { name, value, type } = e.target;
         const checked = (e.target as HTMLInputElement).checked;
@@ -84,34 +117,6 @@ const RestaurantInfoPage = () => {
             </div>
         );
     }
-
-    const DetailItem = ({ icon, label, value }: { icon: React.ReactNode, label: string, value: string | number | boolean }) => (
-        // ... implementation remains the same
-        <div>
-            <label className="text-sm font-medium text-gray-500 flex items-center">
-                {icon}
-                <span className="ml-2">{label}</span>
-            </label>
-            <p className="mt-1 text-lg text-gray-900">{String(value)}</p>
-        </div>
-    );
-
-    // Use the new EditItemProps interface here
-    const EditItem = ({ label, name, value, onChange, type = "text", rows = 1 }: EditItemProps) => (
-        <div className={type === 'textarea' ? 'md:col-span-2' : ''}>
-            <label htmlFor={name} className="block text-sm font-medium text-gray-700">{label}</label>
-            {type === 'textarea' ? (
-                <textarea id={name} name={name} value={String(value)} onChange={onChange} rows={rows} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 text-black px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500" />
-            ) : type === 'checkbox' ? (
-                <div className="mt-2">
-                    <input id={name} name={name} type="checkbox" checked={Boolean(value)} onChange={onChange} className="h-5 w-5 rounded border-gray-300 text-orange-600 focus:ring-orange-500" />
-                </div>
-            ) : (
-                        <input id={name} name={name} type={type} value={String(value)} onChange={onChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none text-black focus:ring-orange-500 focus:border-orange-500" />
-            )}
-        </div>
-    );
-
     return (
         // ... The rest of the JSX remains the same
         <div className="min-h-screen bg-gray-100 p-4 sm:p-8">
@@ -159,7 +164,21 @@ const RestaurantInfoPage = () => {
                                     <EditItem label="Restaurant Name" name="name" value={editedData.name} onChange={handleChange} />
                                     <EditItem label="Phone" name="phone" value={editedData.phone} onChange={handleChange} />
                                     <EditItem label="Location (e.g., Accra)" name="location" value={editedData.location} onChange={handleChange} />
-                                    <EditItem label="Cuisine Type" name="cuisine" value={editedData.cuisine} onChange={handleChange} />
+                                    <div>
+                                        <label htmlFor="cuisine" className="block text-sm font-medium text-gray-700">Cuisine Type</label>
+                                        <select
+                                            id="cuisine"
+                                            name="cuisine"
+                                            value={editedData.cuisine}
+                                            onChange={handleChange}
+                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 text-black focus:border-orange-500"
+                                        >
+                                            <option value="Local Ghanaian Foods">Local Ghanaian Foods</option>
+                                            <option value="Foreign Foods">Foreign Foods</option>
+                                            <option value="Both">Both</option>
+                                        </select>
+                                    </div>
+
                                     <EditItem label="Full Address" name="address" value={editedData.address} onChange={handleChange} type="textarea" rows={2} />
                                     <EditItem label="Description" name="description" value={editedData.description} onChange={handleChange} type="textarea" rows={3} />
                                     <EditItem label="Specialty Dish" name="specialty" value={editedData.specialty} onChange={handleChange} />
