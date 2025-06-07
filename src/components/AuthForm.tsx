@@ -33,7 +33,8 @@ const AuthForm = ({ isSignUp }: AuthFormProps) => {
             router.push('/login'); // Redirect to login after sign up
         } else {
             alert(`Logged in as ${email}! (Simulated)`);
-            router.push('/'); // Redirect to home after login
+            // Redirect to the new restaurant dashboard page
+            router.push('/dashboard/restaurant-info');
         }
         setIsLoading(false);
     };
