@@ -1,31 +1,43 @@
-// src/store/features/authSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { auth } from '@/firebase/init'; //
-import { signInWithEmailAndPassword, User } from 'firebase/auth';
+import { auth, db } from '@/firebase/init';
+import { signInWithEmailAndPassword, User, signOut as firebaseSignOut } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { RestaurantInfoInterface } from '@/interfaces/RestaurantInfoInterface';
 
-// Define a type for the slice state
+type SerializableUser = Omit<User, 'providerData'>;
+
 interface AuthState {
-    user: User | null;
+    user: SerializableUser | null;
     isLoading: boolean;
     error: string | null;
+    restaurantInfo: RestaurantInfoInterface | null;
 }
 
-// Define the initial state using that type
 const initialState: AuthState = {
     user: null,
     isLoading: false,
     error: null,
+    restaurantInfo: null,
 };
 
-// Create an async thunk for logging in a user
 export const loginUser = createAsyncThunk(
     'auth/loginUser',
     async ({ email, password }: { email: string, password: string }, { rejectWithValue }) => {
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            return JSON.parse(JSON.stringify(userCredential.user));
+            const user = userCredential.user;
+
+            const restaurantDocRef = doc(db, 'restaurants', user.uid);
+            const restaurantDocSnap = await getDoc(restaurantDocRef);
+
+            const serializableUser: SerializableUser = JSON.parse(JSON.stringify(user));
+            const restaurantData = restaurantDocSnap.exists()
+                ? (restaurantDocSnap.data() as RestaurantInfoInterface)
+                : null;
+
+            return { user: serializableUser, restaurantInfo: restaurantData };
+
         } catch (error: unknown) {
-            // --- Start of Changes ---
             let errorMessage = "An unknown error occurred.";
             if (typeof error === 'object' && error !== null && 'code' in error) {
                 const errorCode = (error as { code: string }).code;
@@ -48,7 +60,6 @@ export const loginUser = createAsyncThunk(
                 }
             }
             return rejectWithValue(errorMessage);
-            // --- End of Changes ---
         }
     }
 );
@@ -58,9 +69,13 @@ export const authSlice = createSlice({
     initialState,
     reducers: {
         logout: (state) => {
+            firebaseSignOut(auth);
             state.user = null;
-            auth.signOut();
+            state.restaurantInfo = null;
         },
+        setRestaurantInfo: (state, action: PayloadAction<RestaurantInfoInterface>) => {
+            state.restaurantInfo = action.payload;
+        }
     },
     extraReducers: (builder) => {
         builder
@@ -68,9 +83,10 @@ export const authSlice = createSlice({
                 state.isLoading = true;
                 state.error = null;
             })
-            .addCase(loginUser.fulfilled, (state, action: PayloadAction<User>) => {
+            .addCase(loginUser.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.user = action.payload;
+                state.user = action.payload.user;
+                state.restaurantInfo = action.payload.restaurantInfo;
             })
             .addCase(loginUser.rejected, (state, action) => {
                 state.isLoading = false;
@@ -79,6 +95,5 @@ export const authSlice = createSlice({
     },
 });
 
-export const { logout } = authSlice.actions;
-
+export const { logout, setRestaurantInfo } = authSlice.actions;
 export default authSlice.reducer;

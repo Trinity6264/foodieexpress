@@ -1,16 +1,22 @@
+// src/interfaces/RestaurantInfoInterface.ts
 /**
  * Interface representing a restaurant entity.
  */
 export interface RestaurantInfoInterface {
-    readonly id: number;
-    readonly name: string;
-    readonly cuisine: string;
-    readonly rating: number;
-    readonly deliveryTime: string;
-    readonly deliveryFee: string;
-    readonly image: string;
-    readonly specialty: string;
-    readonly location: string;
-    readonly featured: boolean;
-    readonly minOrder: string;
-  }
+  id: string;
+  userId: string;
+  name: string;
+  cuisine: string;
+  rating: number;
+  deliveryTime: string;
+  deliveryFee: string;
+  image: string;
+  specialty: string;
+  location: string;
+  featured: boolean;
+  minOrder: string;
+  phone: string;
+  address: string;
+  description: string;
+  isOpen: boolean;
+}
