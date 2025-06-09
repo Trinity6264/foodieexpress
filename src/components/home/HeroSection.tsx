@@ -4,37 +4,38 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 
 const HeroSection = () => {
-        const [currentSlide, setCurrentSlide] = useState(0);
+    const [currentSlide, setCurrentSlide] = useState(0);
 
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setCurrentSlide((prev) => (prev + 1) % 3);
-        }, 5000);
-        return () => clearInterval(timer);
-    }, []);
-    
     const heroSlides = [
         {
-            title: "Delicious Local Cuisine",
-            subtitle: "Authentic Ghanaian dishes delivered to your doorstep",
-            image: "https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=800&h=600&fit=crop",
-            cta: "Order Local Food"
+            title: "Unforgettable Jollof Rice",
+            subtitle: "Experience the taste of West Africa's most famous dish",
+            image: "https://firebasestorage.googleapis.com/v0/b/boo-app-55d48.appspot.com/o/landing%2FGemini_Generated_Image_4b45wo4b45wo4b45.jpg?alt=media&token=b4dfb607-3e33-45df-a7e7-b9815b977278",
+            cta: "Get Jollof Delivered"
         },
         {
-            title: "International Flavors",
-            subtitle: "Explore cuisines from around the world",
-            image: "https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?w=800&h=600&fit=crop",
-            cta: "Browse International"
+            title: "Authentic Ghanaian Waakye",
+            subtitle: "A classic rice and beans dish, full of flavor and served with all the right sides.",
+            image: "https://firebasestorage.googleapis.com/v0/b/boo-app-55d48.appspot.com/o/landing%2FGemini_Generated_Image_4b45wp4b45wp4b45.jpg?alt=media&token=309b5c6e-365b-4f93-9bb2-887827d746b0",
+            cta: "Order Waakye Now"
         },
         {
-            title: "Fast & Fresh Delivery",
-            subtitle: "Hot meals delivered in 30 minutes or less",
-            image: "https://images.unsplash.com/photo-1571407970349-bc81e7e96d47?w=800&h=600&fit=crop",
-            cta: "Order Now"
+            title: "Fresh Grilled Tilapia",
+            subtitle: "Perfectly seasoned and grilled, served with spicy banku and fresh pepper sauce.",
+            image: "https://firebasestorage.googleapis.com/v0/b/boo-app-55d48.appspot.com/o/landing%2FGemini_Generated_Image_4b45wq4b45wq4b45.jpg?alt=media&token=38a50096-2fc6-4833-b866-2ecf72e1901e",
+            cta: "Try Our Tilapia"
         }
     ];
 
-  return (
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+        }, 5000);
+        return () => clearInterval(timer);
+    }, [heroSlides.length]);
+
+
+    return (
         <section id="home" className="relative h-screen flex items-center justify-center overflow-hidden">
             {/* Background Slider */}
             <div className="absolute inset-0">
@@ -49,6 +50,7 @@ const HeroSection = () => {
                             alt={slide.title}
                             fill
                             className="w-full h-full object-cover"
+                            priority={index === 0}
                         />
                         <div className="absolute inset-0 bg-black/50"></div>
 
