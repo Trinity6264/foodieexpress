@@ -1,10 +1,10 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Mail, Lock, LogIn,  AlertCircle } from 'lucide-react';
+import { Mail, Lock, LogIn, UserPlus, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { loginUser } from '@/store/features/authSlice';
+import { loginUser, signUpUser } from '@/store/features/authSlice';
 
 interface AuthFormProps {
     isSignUp: boolean;
@@ -13,17 +13,25 @@ interface AuthFormProps {
 const AuthForm = ({ isSignUp }: AuthFormProps) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [formError, setFormError] = useState('');
+
     const router = useRouter();
     const dispatch = useAppDispatch();
-    const { user, isLoading, error, restaurantInfo } = useAppSelector((state) => state.auth);
+    const { user, isLoading, error: serverError, restaurantInfo } = useAppSelector((state) => state.auth);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!isSignUp) {
-            dispatch(loginUser({ email, password }));
+        setFormError('');
+
+        if (isSignUp) {
+            if (password !== confirmPassword) {
+                setFormError("Passwords do not match!");
+                return;
+            }
+            dispatch(signUpUser({ email, password }));
         } else {
-            // Placeholder for signup logic
-            alert('Signup not implemented yet.');
+            dispatch(loginUser({ email, password }));
         }
     };
 
@@ -37,8 +45,10 @@ const AuthForm = ({ isSignUp }: AuthFormProps) => {
         }
     }, [user, restaurantInfo, isLoading, router]);
 
+    const displayError = formError || serverError;
+
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+        <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
             <div className="w-full max-w-md space-y-8 rounded-lg bg-white p-8 shadow-xl">
                 <div>
                     <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
@@ -52,34 +62,39 @@ const AuthForm = ({ isSignUp }: AuthFormProps) => {
                     </p>
                 </div>
                 <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-                    {error && (
+                    {displayError && (
                         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
                             <AlertCircle className="w-5 h-5 inline-block mr-2" />
-                            <span className="align-middle">{error}</span>
+                            <span className="align-middle">{displayError}</span>
                         </div>
                     )}
-                    <div className="rounded-md shadow-sm">
-                        {/* Email Input */}
-                        <div className="relative mb-4">
+                    <div className="space-y-4">
+                        <div className="relative">
                             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                            <input id="email-address" name="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full pl-10 pr-4 py-3 border text-black border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500" placeholder="Email address" />
+                            <input id="email-address" name="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full pl-10 pr-4 py-3 border border-gray-300 text-black rounded-md focus:ring-2 focus:ring-orange-500" placeholder="Email address" />
                         </div>
-                        {/* Password Input */}
                         <div className="relative">
                             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                            <input id="password" name="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full pl-10 pr-4 py-3 border text-black border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500" placeholder="Password" />
+                            <input id="password" name="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full pl-10 pr-4 py-3 border text-black border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500" placeholder="Password (min. 6 characters)" />
                         </div>
+                        {isSignUp && (
+                            <div className="relative">
+                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                                <input id="confirm-password" name="confirm-password" type="password" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full text-black pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500" placeholder="Confirm Password" />
+                            </div>
+                        )}
                     </div>
                     <div>
-                        <button type="submit" className="group relative flex w-full justify-center rounded-md border border-transparent bg-orange-600 px-4 py-3 text-sm font-medium text-white hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50" disabled={isLoading}>
+                        <button type="submit" className="group mt-6 relative flex w-full justify-center rounded-md border border-transparent bg-orange-600 px-4 py-3 text-sm font-medium text-white hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50" disabled={isLoading}>
                             {isLoading ? (
                                 <>
                                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                                    Signing In...
+                                    {isSignUp ? 'Creating Account...' : 'Signing In...'}
                                 </>
                             ) : (
                                 <>
-                                    <LogIn className="mr-2 h-5 w-5" /> Sign In
+                                    {isSignUp ? <UserPlus className="mr-2 h-5 w-5" /> : <LogIn className="mr-2 h-5 w-5" />}
+                                    {isSignUp ? 'Sign Up' : 'Sign In'}
                                 </>
                             )}
                         </button>

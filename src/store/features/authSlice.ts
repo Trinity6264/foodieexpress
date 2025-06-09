@@ -1,8 +1,9 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { auth, db } from '@/firebase/init';
-import { signInWithEmailAndPassword, User, signOut as firebaseSignOut } from 'firebase/auth';
+import { signInWithEmailAndPassword, User, signOut as firebaseSignOut, createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { RestaurantInfoInterface } from '@/interfaces/RestaurantInfoInterface';
+import { FirebaseError } from 'firebase/app';
 
 type SerializableUser = Omit<User, 'providerData'>;
 
@@ -64,6 +65,27 @@ export const loginUser = createAsyncThunk(
     }
 );
 
+export const signUpUser = createAsyncThunk(
+    'auth/signUpUser',
+    async ({ email, password }: { email: string; password: string }, { rejectWithValue }) => {
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+            const serializableUser: SerializableUser = JSON.parse(JSON.stringify(user));
+            return { user: serializableUser, restaurantInfo: null };
+        } catch (error: unknown) {
+            if (error instanceof FirebaseError) {
+                let msg = 'Failed to create an account.';
+                if (error.code === 'auth/email-already-in-use') msg = 'This email is already in use.';
+                if (error.code === 'auth/weak-password') msg = 'Password must be at least 6 characters long.';
+                return rejectWithValue(msg);
+            }
+            return rejectWithValue('An unexpected error occurred.');
+        }
+    }
+);
+  
+
 export const authSlice = createSlice({
     name: 'auth',
     initialState,
@@ -79,18 +101,34 @@ export const authSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
+            // Common pending state
             .addCase(loginUser.pending, (state) => {
                 state.isLoading = true;
                 state.error = null;
             })
+            .addCase(signUpUser.pending, (state) => {
+                state.isLoading = true;
+                state.error = null;
+            })
+            // Common rejected state
+            .addCase(loginUser.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = action.payload as string;
+            })
+            .addCase(signUpUser.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = action.payload as string;
+            })
+            // Fulfilled states
             .addCase(loginUser.fulfilled, (state, action) => {
                 state.isLoading = false;
                 state.user = action.payload.user;
                 state.restaurantInfo = action.payload.restaurantInfo;
             })
-            .addCase(loginUser.rejected, (state, action) => {
+            .addCase(signUpUser.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.error = action.payload as string;
+                state.user = action.payload.user;
+                state.restaurantInfo = action.payload.restaurantInfo;
             });
     },
 });
