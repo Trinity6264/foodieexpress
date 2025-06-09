@@ -2,6 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './features/authSlice'; 
 import menuReducer from './features/menuSlice';
 import orderReducer from './features/orderSlice';
+import cartReducer from './features/cartSlice';
 
 
 
@@ -12,6 +13,7 @@ export const makeStore = () => {
             auth: authReducer,
             menu: menuReducer,
             orders: orderReducer, 
+            cart: cartReducer,
         },
         // Add any middleware here if needed
         middleware: (getDefaultMiddleware) =>

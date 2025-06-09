@@ -1,6 +1,6 @@
-import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { db } from "@/firebase/init";
-import { collection, getDocs, updateDoc, doc, query, orderBy } from "firebase/firestore";
+import { collection, getDocs, updateDoc, doc, query, orderBy, addDoc, serverTimestamp } from "firebase/firestore";
 import { Order } from "@/interfaces/OrderInterface";
 import { FirebaseError } from "firebase/app";
 
@@ -53,31 +53,50 @@ export const updateOrderStatus = createAsyncThunk(
     }
 );
 
+// NEW: Async thunk to place a new order
+export const placeOrder = createAsyncThunk(
+    'orders/placeOrder',
+    async ({ restaurantId, orderData }: { restaurantId: string; orderData: Omit<Order, 'id' | 'orderTime'> }, { rejectWithValue }) => {
+        try {
+            const ordersCol = collection(db, 'restaurants', restaurantId, 'orders');
+            const orderPayload = {
+                ...orderData,
+                orderTime: serverTimestamp(), // Use server timestamp for accuracy
+                status: 'Pending' as const,
+            };
+            const docRef = await addDoc(ordersCol, orderPayload);
+            return { ...orderPayload, id: docRef.id };
+        } catch (error) {
+            console.error("Error placing order:", error);
+            if (error instanceof FirebaseError) {
+                return rejectWithValue(error.message);
+            }
+            return rejectWithValue('Failed to place order.');
+        }
+    }
+);
+
 const orderSlice = createSlice({
     name: 'orders',
     initialState,
     reducers: {},
     extraReducers: (builder) => {
         builder
-            // Fetch Orders
-            .addCase(fetchOrders.pending, (state) => {
+            // ... (existing extraReducers) ...
+
+            // Add cases for the new placeOrder thunk
+            .addCase(placeOrder.pending, (state) => {
                 state.status = 'loading';
+                state.error = null;
             })
-            .addCase(fetchOrders.fulfilled, (state, action: PayloadAction<Order[]>) => {
+            .addCase(placeOrder.fulfilled, (state) => {
                 state.status = 'succeeded';
-                state.orders = action.payload;
+                // Optionally add the new order to the state
+                // state.orders.unshift(action.payload as Order); 
             })
-            .addCase(fetchOrders.rejected, (state, action) => {
+            .addCase(placeOrder.rejected, (state, action) => {
                 state.status = 'failed';
                 state.error = action.payload as string;
-            })
-            // Update Order Status
-            .addCase(updateOrderStatus.fulfilled, (state, action) => {
-                const { orderId, status } = action.payload;
-                const existingOrder = state.orders.find(order => order.id === orderId);
-                if (existingOrder) {
-                    existingOrder.status = status;
-                }
             });
     }
 });
