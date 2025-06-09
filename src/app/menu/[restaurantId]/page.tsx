@@ -5,12 +5,6 @@ import { MenuItemInterface } from '@/interfaces/ItemInfoInterface';
 import MenuPageClient from '@/components/MenuPageClient';
 import { notFound } from 'next/navigation';
 
-interface MenuPageProps {
-    params: {
-        restaurantId: string;
-    };
-}
-
 // Helper function to fetch restaurant details
 async function getRestaurant(id: string): Promise<RestaurantInfoInterface | null> {
     try {
@@ -41,8 +35,8 @@ async function getMenuItems(restaurantId: string): Promise<MenuItemInterface[]> 
     }
 }
 
-
-export default async function MenuPage({ params }: MenuPageProps) {
+// The 'MenuPageProps' interface has been removed and props are typed directly.
+export default async function MenuPage({ params }: { params: { restaurantId: string } }) {
     const { restaurantId } = params;
 
     // Fetch restaurant and menu data in parallel
