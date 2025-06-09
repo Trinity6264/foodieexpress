@@ -16,7 +16,8 @@ interface AuthState {
 
 const initialState: AuthState = {
     user: null,
-    isLoading: false,
+    // Start with isLoading: true. This is crucial for the auth listener.
+    isLoading: true,
     error: null,
     restaurantInfo: null,
 };
@@ -84,16 +85,24 @@ export const signUpUser = createAsyncThunk(
         }
     }
 );
-  
+
 
 export const authSlice = createSlice({
     name: 'auth',
     initialState,
     reducers: {
+        // This reducer will be used by our auth listener
+        setAuthState: (state, action: PayloadAction<{ user: SerializableUser | null; restaurantInfo: RestaurantInfoInterface | null }>) => {
+            state.user = action.payload.user;
+            state.restaurantInfo = action.payload.restaurantInfo;
+            state.isLoading = false;
+            state.error = null;
+        },
         logout: (state) => {
             firebaseSignOut(auth);
             state.user = null;
             state.restaurantInfo = null;
+            state.isLoading = false; // Set loading to false on logout
         },
         setRestaurantInfo: (state, action: PayloadAction<RestaurantInfoInterface>) => {
             state.restaurantInfo = action.payload;
@@ -133,5 +142,5 @@ export const authSlice = createSlice({
     },
 });
 
-export const { logout, setRestaurantInfo } = authSlice.actions;
+export const { setAuthState, logout, setRestaurantInfo } = authSlice.actions;
 export default authSlice.reducer;

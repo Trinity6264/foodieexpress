@@ -1,9 +1,9 @@
-
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Footer from "@/components/Footer";
 import StoreProvider from "@/store/Provider";
+import AuthInitializer from "@/components/AuthInitializer"; // Import the new component
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -50,7 +50,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <StoreProvider>{children}</StoreProvider>
+        <StoreProvider>
+          {/* This component will now handle auth state persistence */}
+          <AuthInitializer />
+
+          {children}
+        </StoreProvider>
 
         {/* Start Footer */}
 

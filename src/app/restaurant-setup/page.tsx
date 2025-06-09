@@ -6,13 +6,22 @@ import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/store/hooks';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '@/firebase/init';
-import { RestaurantInfoInterface } from '@/interfaces/RestaurantInfoInterface';
+import { RestaurantInfoInterface, OperatingHours } from '@/interfaces/RestaurantInfoInterface';
+
+const initialOperatingHours: OperatingHours[] = [
+    { day: 'Monday', openTime: '09:00', closeTime: '22:00', isOpen: true },
+    { day: 'Tuesday', openTime: '09:00', closeTime: '22:00', isOpen: true },
+    { day: 'Wednesday', openTime: '09:00', closeTime: '22:00', isOpen: true },
+    { day: 'Thursday', openTime: '09:00', closeTime: '22:00', isOpen: true },
+    { day: 'Friday', openTime: '09:00', closeTime: '23:00', isOpen: true },
+    { day: 'Saturday', openTime: '10:00', closeTime: '23:00', isOpen: true },
+    { day: 'Sunday', openTime: '10:00', closeTime: '21:00', isOpen: false },
+];
 
 const RestaurantSetupPage = () => {
     const router = useRouter();
     const { user } = useAppSelector((state) => state.auth);
 
-    // Initialize state with the new interface fields
     const [restaurantInfo, setRestaurantInfo] = useState({
         name: "",
         cuisine: "Local Ghanaian Foods",
@@ -25,14 +34,21 @@ const RestaurantSetupPage = () => {
         phone: "",
         address: "",
         isOpen: true,
-        image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=800&h=400&fit=crop"
+        image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=800&h=400&fit=crop",
+        operatingHours: initialOperatingHours,
     });
     const [isLoading, setIsLoading] = useState(false);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const handleInfoChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
         const checked = (e.target as HTMLInputElement).checked;
         setRestaurantInfo(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+    };
+
+    const handleHoursChange = (index: number, field: keyof OperatingHours, value: string | boolean) => {
+        const updatedHours = [...restaurantInfo.operatingHours];
+        updatedHours[index] = { ...updatedHours[index], [field]: value } as OperatingHours;
+        setRestaurantInfo(prev => ({ ...prev, operatingHours: updatedHours }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -46,115 +62,66 @@ const RestaurantSetupPage = () => {
             return;
         }
 
-        if (!restaurantInfo.name || !restaurantInfo.location || !restaurantInfo.address || !restaurantInfo.phone) {
-            alert("Please fill in all required fields.");
-            setIsLoading(false);
-            return;
-        }
-
         try {
             const newRestaurantData: RestaurantInfoInterface = {
                 ...restaurantInfo,
-                id: user.uid, // The document ID is the user's UID
+                id: user.uid,
                 userId: user.uid,
-                rating: 0, // Default rating for new restaurants
-                featured: false, // Not featured by default
+                rating: 0,
+                featured: false,
             };
 
-            // Use the user's UID as the document ID in the 'restaurants' collection
             await setDoc(doc(db, "restaurants", user.uid), newRestaurantData);
 
             alert("Restaurant information saved successfully!");
-            // You can also update the redux state here if needed, or rely on a fresh fetch next time.
             router.push('/dashboard/restaurant-info');
 
         } catch (error) {
             console.error("Error saving restaurant info:", error);
-            alert("Failed to save restaurant information. Please try again.");
+            alert("Failed to save restaurant information.");
         } finally {
             setIsLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
             <div className="max-w-4xl w-full space-y-8 rounded-lg bg-white p-8 shadow-xl">
                 <div className="text-center">
                     <ChefHat className="mx-auto h-16 w-16 text-orange-600 mb-4" />
                     <h2 className="text-3xl font-extrabold text-gray-900">Tell us about your Restaurant</h2>
-                    <p className="mt-2 text-sm text-gray-600">
-                        This is a one-time setup to get your restaurant ready on FoodieExpress.
-                    </p>
+                    <p className="mt-2 text-sm text-gray-600">This is a one-time setup to get your restaurant ready.</p>
                 </div>
 
-                <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+                <form className="mt-8 space-y-8" onSubmit={handleSubmit}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
-                        {/* Restaurant Name */}
-                        <div>
-                            <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                                Restaurant Name <span className="text-red-500">*</span>
-                            </label>
-                            <input id="name" name="name" type="text" required value={restaurantInfo.name} onChange={handleChange} className="mt-1 block w-full border text-black border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm" />
-                        </div>
-
-                        {/* Cuisine Type */}
-                        <div>
-                            <label htmlFor="cuisine" className="block text-sm font-medium text-gray-700">Cuisine Type</label>
-                            <select id="cuisine" name="cuisine" value={restaurantInfo.cuisine} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-black focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm">
-                                <option value="Local Ghanaian Foods">Local Ghanaian Foods</option>
-                                <option value="Foreign Foods">Foreign Foods</option>
-                                <option value="Both">Both</option>
-                            </select>
-                        </div>
-
-                        {/* Phone Number */}
-                        <div>
-                            <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-                                Contact Phone <span className="text-red-500">*</span>
-                            </label>
-                            <input id="phone" name="phone" type="tel" required value={restaurantInfo.phone} onChange={handleChange} className="mt-1 block w-full border border-gray-300 text-black rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm" />
-                        </div>
-
-                        {/* Location (e.g., City/Town) */}
-                        <div>
-                            <label htmlFor="location" className="block text-sm font-medium text-gray-700">
-                                Location (City/Town) <span className="text-red-500">*</span>
-                            </label>
-                            <input id="location" name="location" type="text" required value={restaurantInfo.location} onChange={handleChange} className="mt-1 block w-full border text-black border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm" />
-                        </div>
-
-                        {/* Full Address */}
-                        <div className="md:col-span-2">
-                            <label htmlFor="address" className="block text-sm font-medium text-gray-700">
-                                Full Address <span className="text-red-500">*</span>
-                            </label>
-                            <input id="address" name="address" type="text" required value={restaurantInfo.address} onChange={handleChange} className="mt-1 block w-full border text-black border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm" />
-                        </div>
-
-                        {/* Description */}
-                        <div className="md:col-span-2">
-                            <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
-                            <textarea id="description" name="description" rows={3} value={restaurantInfo.description} onChange={handleChange} className="mt-1 block w-full text-black border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"></textarea>
-                        </div>
-
-                        {/* Is Open */}
-                        <div>
-                            <label htmlFor="isOpen" className="block text-sm font-medium text-gray-700">Operating Status</label>
-                            <div className="mt-2 flex items-center">
-                                <input id="isOpen" name="isOpen" type="checkbox" checked={restaurantInfo.isOpen} onChange={handleChange} className="h-4 w-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500" />
-                                <label htmlFor="isOpen" className="ml-2 block text-sm text-gray-900">Open for business</label>
-                            </div>
-                        </div>
-
+                        {/* Restaurant Info Fields */}
+                        <div className="md:col-span-2"><h3 className="text-lg font-medium leading-6 text-gray-900">Basic Information</h3></div>
+                        <input name="name" placeholder="Restaurant Name *" required value={restaurantInfo.name} onChange={handleInfoChange} className="mt-1 block w-full border text-black border-gray-300 rounded-md shadow-sm py-2 px-3" />
+                        <select name="cuisine" value={restaurantInfo.cuisine} onChange={handleInfoChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-black"><option>Local Ghanaian Foods</option><option>Foreign Foods</option><option>Both</option></select>
+                        <input name="phone" placeholder="Contact Phone *" type="tel" required value={restaurantInfo.phone} onChange={handleInfoChange} className="mt-1 block w-full border text-black border-gray-300 rounded-md shadow-sm py-2 px-3" />
+                        <input name="location" placeholder="Location (City/Town) *" required value={restaurantInfo.location} onChange={handleInfoChange} className="mt-1 block w-full border text-black border-gray-300 rounded-md shadow-sm py-2 px-3" />
+                        <div className="md:col-span-2"><input name="address" placeholder="Full Address *" required value={restaurantInfo.address} onChange={handleInfoChange} className="mt-1 block w-full border text-black border-gray-300 rounded-md shadow-sm py-2 px-3" /></div>
+                        <div className="md:col-span-2"><textarea name="description" placeholder="Description" rows={3} value={restaurantInfo.description} onChange={handleInfoChange} className="mt-1 block w-full text-black border border-gray-300 rounded-md shadow-sm py-2 px-3"></textarea></div>
                     </div>
 
-                    {/* Submit Button */}
+                    <div className="space-y-6">
+                        <h3 className="text-lg font-medium leading-6 text-gray-900">Operating Hours</h3>
+                        {restaurantInfo.operatingHours.map((hour, index) => (
+                            <div key={hour.day} className="grid grid-cols-4 gap-4 items-center">
+                                <label className="font-medium text-gray-700">{hour.day}</label>
+                                <input type="time" value={hour.openTime} disabled={!hour.isOpen} onChange={(e) => handleHoursChange(index, 'openTime', e.target.value)} className="w-full border text-black border-gray-300 rounded-md shadow-sm py-2 px-3 disabled:bg-gray-100" />
+                                <input type="time" value={hour.closeTime} disabled={!hour.isOpen} onChange={(e) => handleHoursChange(index, 'closeTime', e.target.value)} className="w-full border text-black border-gray-300 rounded-md shadow-sm py-2 px-3 disabled:bg-gray-100" />
+                                <div className="flex items-center justify-end">
+                                    <input type="checkbox" checked={hour.isOpen} onChange={(e) => handleHoursChange(index, 'isOpen', e.target.checked)} className="h-4 w-4 text-orange-600 border-gray-300 rounded" />
+                                    <label className="ml-2 text-sm text-gray-900">Open</label>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
                     <div className="mt-6">
-                        <button
-                            type="submit"
-                            className="group relative flex w-full justify-center rounded-md border border-transparent bg-orange-600 px-4 py-3 text-sm font-medium text-white hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                            disabled={isLoading}
-                        >
+                        <button type="submit" className="group relative flex w-full justify-center rounded-md bg-orange-600 px-4 py-3 text-sm font-medium text-white hover:bg-orange-700 disabled:opacity-50" disabled={isLoading}>
                             {isLoading ? 'Saving...' : <><Save className="mr-2 h-5 w-5" /> Save and Continue</>}
                         </button>
                     </div>
