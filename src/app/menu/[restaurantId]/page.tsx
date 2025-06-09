@@ -5,11 +5,7 @@ import { MenuItemInterface } from '@/interfaces/ItemInfoInterface';
 import MenuPageClient from '@/components/MenuPageClient';
 import { notFound } from 'next/navigation';
 
-type MenuPageProps = {
-    params: {
-        restaurantId: string;
-    };
-};
+// No need for the MenuPageProps type definition
 
 async function getRestaurant(id: string): Promise<RestaurantInfoInterface | null> {
     try {
@@ -39,7 +35,8 @@ async function getMenuItems(restaurantId: string): Promise<MenuItemInterface[]> 
     }
 }
 
-export default async function MenuPage({ params }: MenuPageProps) {
+// Correct the function signature here
+export default async function MenuPage({ params }: { params: { restaurantId: string } }) {
     const { restaurantId } = params;
 
     const [restaurant, menuItems] = await Promise.all([
