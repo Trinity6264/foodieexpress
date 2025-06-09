@@ -85,7 +85,7 @@ const AuthForm = ({ isSignUp }: AuthFormProps) => {
                         )}
                     </div>
                     <div>
-                        <button type="submit" className="group mt-6 relative flex w-full justify-center rounded-md border border-transparent bg-orange-600 px-4 py-3 text-sm font-medium text-white hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50" disabled={isLoading}>
+                        <button type="submit" className="group mt-6 relative flex w-full justify-center rounded-md border border-transparent bg-orange-600 px-4 py-3 text-sm font-medium text-white cursor-pointer hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50" disabled={isLoading}>
                             {isLoading ? (
                                 <>
                                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
