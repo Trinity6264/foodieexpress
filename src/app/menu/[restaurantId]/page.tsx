@@ -5,7 +5,12 @@ import { MenuItemInterface } from '@/interfaces/ItemInfoInterface';
 import MenuPageClient from '@/components/MenuPageClient';
 import { notFound } from 'next/navigation';
 
-// Helper function to fetch restaurant details
+type MenuPageProps = {
+    params: {
+        restaurantId: string;
+    };
+};
+
 async function getRestaurant(id: string): Promise<RestaurantInfoInterface | null> {
     try {
         const docRef = doc(db, 'restaurants', id);
@@ -20,7 +25,6 @@ async function getRestaurant(id: string): Promise<RestaurantInfoInterface | null
     }
 }
 
-// Helper function to fetch menu items for a specific restaurant
 async function getMenuItems(restaurantId: string): Promise<MenuItemInterface[]> {
     try {
         const menuItemsCol = collection(db, 'restaurants', restaurantId, 'menuItems');
@@ -35,17 +39,14 @@ async function getMenuItems(restaurantId: string): Promise<MenuItemInterface[]> 
     }
 }
 
-// The 'MenuPageProps' interface has been removed and props are typed directly.
-export default async function MenuPage({ params }: { params: { restaurantId: string } }) {
+export default async function MenuPage({ params }: MenuPageProps) {
     const { restaurantId } = params;
 
-    // Fetch restaurant and menu data in parallel
     const [restaurant, menuItems] = await Promise.all([
         getRestaurant(restaurantId),
         getMenuItems(restaurantId),
     ]);
 
-    // If the restaurant doesn't exist, show a 404 page
     if (!restaurant) {
         notFound();
     }
