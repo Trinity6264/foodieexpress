@@ -3,10 +3,11 @@
 import React, { useState } from 'react';
 import { ChefHat, Save } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useAppSelector } from '@/store/hooks';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '@/firebase/init';
 import { RestaurantInfoInterface, OperatingHours } from '@/interfaces/RestaurantInfoInterface';
+import { setRestaurantInfo } from '@/store/features/authSlice';
 
 const initialOperatingHours: OperatingHours[] = [
     { day: 'Monday', openTime: '09:00', closeTime: '22:00', isOpen: true },
@@ -21,8 +22,10 @@ const initialOperatingHours: OperatingHours[] = [
 const RestaurantSetupPage = () => {
     const router = useRouter();
     const { user } = useAppSelector((state) => state.auth);
+    const dispatch = useAppDispatch();
 
-    const [restaurantInfo, setRestaurantInfo] = useState({
+
+    const [restaurantInformation, setRestaurantInformation] = useState({
         name: "",
         cuisine: "Local Ghanaian Foods",
         specialty: "",
@@ -42,13 +45,13 @@ const RestaurantSetupPage = () => {
     const handleInfoChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
         const checked = (e.target as HTMLInputElement).checked;
-        setRestaurantInfo(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+        setRestaurantInformation(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
     };
 
     const handleHoursChange = (index: number, field: keyof OperatingHours, value: string | boolean) => {
-        const updatedHours = [...restaurantInfo.operatingHours];
+        const updatedHours = [...restaurantInformation.operatingHours];
         updatedHours[index] = { ...updatedHours[index], [field]: value } as OperatingHours;
-        setRestaurantInfo(prev => ({ ...prev, operatingHours: updatedHours }));
+        setRestaurantInformation(prev => ({ ...prev, operatingHours: updatedHours }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -64,7 +67,7 @@ const RestaurantSetupPage = () => {
 
         try {
             const newRestaurantData: RestaurantInfoInterface = {
-                ...restaurantInfo,
+                ...restaurantInformation,
                 id: user.uid,
                 userId: user.uid,
                 rating: 0,
@@ -74,8 +77,10 @@ const RestaurantSetupPage = () => {
             await setDoc(doc(db, "restaurants", user.uid), newRestaurantData);
 
             alert("Restaurant information saved successfully!");
+            // dispatch({ type: 'auth/setRestaurantInfo', payload: newRestaurantData });
+            dispatch(setRestaurantInfo({ ...newRestaurantData }));
             router.push('/dashboard/restaurant-info');
-
+            return;
         } catch (error) {
             console.error("Error saving restaurant info:", error);
             alert("Failed to save restaurant information.");
@@ -97,17 +102,17 @@ const RestaurantSetupPage = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
                         {/* Restaurant Info Fields */}
                         <div className="md:col-span-2"><h3 className="text-lg font-medium leading-6 text-gray-900">Basic Information</h3></div>
-                        <input name="name" placeholder="Restaurant Name *" required value={restaurantInfo.name} onChange={handleInfoChange} className="mt-1 block w-full border text-black border-gray-300 rounded-md shadow-sm py-2 px-3" />
-                        <select name="cuisine" value={restaurantInfo.cuisine} onChange={handleInfoChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-black"><option>Local Ghanaian Foods</option><option>Foreign Foods</option><option>Both</option></select>
-                        <input name="phone" placeholder="Contact Phone *" type="tel" required value={restaurantInfo.phone} onChange={handleInfoChange} className="mt-1 block w-full border text-black border-gray-300 rounded-md shadow-sm py-2 px-3" />
-                        <input name="location" placeholder="Location (City/Town) *" required value={restaurantInfo.location} onChange={handleInfoChange} className="mt-1 block w-full border text-black border-gray-300 rounded-md shadow-sm py-2 px-3" />
-                        <div className="md:col-span-2"><input name="address" placeholder="Full Address *" required value={restaurantInfo.address} onChange={handleInfoChange} className="mt-1 block w-full border text-black border-gray-300 rounded-md shadow-sm py-2 px-3" /></div>
-                        <div className="md:col-span-2"><textarea name="description" placeholder="Description" rows={3} value={restaurantInfo.description} onChange={handleInfoChange} className="mt-1 block w-full text-black border border-gray-300 rounded-md shadow-sm py-2 px-3"></textarea></div>
+                        <input name="name" placeholder="Restaurant Name *" required value={restaurantInformation.name} onChange={handleInfoChange} className="mt-1 block w-full border text-black border-gray-300 rounded-md shadow-sm py-2 px-3" />
+                        <select name="cuisine" value={restaurantInformation.cuisine} onChange={handleInfoChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-black"><option>Local Ghanaian Foods</option><option>Foreign Foods</option><option>Both</option></select>
+                        <input name="phone" placeholder="Contact Phone *" type="tel" required value={restaurantInformation.phone} onChange={handleInfoChange} className="mt-1 block w-full border text-black border-gray-300 rounded-md shadow-sm py-2 px-3" />
+                        <input name="location" placeholder="Location (City/Town) *" required value={restaurantInformation.location} onChange={handleInfoChange} className="mt-1 block w-full border text-black border-gray-300 rounded-md shadow-sm py-2 px-3" />
+                        <div className="md:col-span-2"><input name="address" placeholder="Full Address *" required value={restaurantInformation.address} onChange={handleInfoChange} className="mt-1 block w-full border text-black border-gray-300 rounded-md shadow-sm py-2 px-3" /></div>
+                        <div className="md:col-span-2"><textarea name="description" placeholder="Description" rows={3} value={restaurantInformation.description} onChange={handleInfoChange} className="mt-1 block w-full text-black border border-gray-300 rounded-md shadow-sm py-2 px-3"></textarea></div>
                     </div>
 
                     <div className="space-y-6">
                         <h3 className="text-lg font-medium leading-6 text-gray-900">Operating Hours</h3>
-                        {restaurantInfo.operatingHours.map((hour, index) => (
+                        {restaurantInformation.operatingHours.map((hour, index) => (
                             <div key={hour.day} className="grid grid-cols-4 gap-4 items-center">
                                 <label className="font-medium text-gray-700">{hour.day}</label>
                                 <input type="time" value={hour.openTime} disabled={!hour.isOpen} onChange={(e) => handleHoursChange(index, 'openTime', e.target.value)} className="w-full border text-black border-gray-300 rounded-md shadow-sm py-2 px-3 disabled:bg-gray-100" />

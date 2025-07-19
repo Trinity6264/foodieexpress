@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Mail, Lock, LogIn, UserPlus, AlertCircle } from 'lucide-react';
+import { Mail, Lock, LogIn, UserPlus, AlertCircle, Eye, EyeOff } from 'lucide-react'; // Import Eye and EyeOff icons
 import Link from 'next/link';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { loginUser, signUpUser } from '@/store/features/authSlice';
@@ -15,6 +15,7 @@ const AuthForm = ({ isSignUp }: AuthFormProps) => {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [formError, setFormError] = useState('');
+    const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
 
     const router = useRouter();
     const dispatch = useAppDispatch();
@@ -47,6 +48,11 @@ const AuthForm = ({ isSignUp }: AuthFormProps) => {
 
     const displayError = formError || serverError;
 
+    // Function to toggle password visibility
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
+    };
+
     return (
         <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
             <div className="w-full max-w-md space-y-8 rounded-lg bg-white p-8 shadow-xl">
@@ -71,16 +77,59 @@ const AuthForm = ({ isSignUp }: AuthFormProps) => {
                     <div className="space-y-4">
                         <div className="relative">
                             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                            <input id="email-address" name="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full pl-10 pr-4 py-3 border border-gray-300 text-black rounded-md focus:ring-2 focus:ring-orange-500" placeholder="Email address" />
+                            <input
+                                id="email-address"
+                                name="email"
+                                type="email"
+                                required
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="w-full pl-10 pr-4 py-3 border border-gray-300 text-black rounded-md focus:ring-2 focus:ring-orange-500"
+                                placeholder="Email address"
+                            />
                         </div>
                         <div className="relative">
                             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                            <input id="password" name="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full pl-10 pr-4 py-3 border text-black border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500" placeholder="Password (min. 6 characters)" />
+                            <input
+                                id="password"
+                                name="password"
+                                type={showPassword ? 'text' : 'password'} // Dynamically set type
+                                required
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="w-full pl-10 pr-10 py-3 border text-black border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500"
+                                placeholder="Password (min. 6 characters)"
+                            />
+                            <button
+                                type="button"
+                                onClick={togglePasswordVisibility}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                            >
+                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                            </button>
                         </div>
                         {isSignUp && (
                             <div className="relative">
                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                                <input id="confirm-password" name="confirm-password" type="password" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full text-black pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500" placeholder="Confirm Password" />
+                                <input
+                                    id="confirm-password"
+                                    name="confirm-password"
+                                    type={showPassword ? 'text' : 'password'}
+                                    required
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    className="w-full text-black pl-10 pr-10 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500"
+                                    placeholder="Confirm Password"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={togglePasswordVisibility}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                >
+                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                </button>
                             </div>
                         )}
                     </div>

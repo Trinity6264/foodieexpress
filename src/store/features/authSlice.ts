@@ -102,7 +102,7 @@ export const authSlice = createSlice({
             firebaseSignOut(auth);
             state.user = null;
             state.restaurantInfo = null;
-            state.isLoading = false; // Set loading to false on logout
+            state.isLoading = false;
         },
         setRestaurantInfo: (state, action: PayloadAction<RestaurantInfoInterface>) => {
             state.restaurantInfo = action.payload;
@@ -110,7 +110,6 @@ export const authSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            // Common pending state
             .addCase(loginUser.pending, (state) => {
                 state.isLoading = true;
                 state.error = null;
@@ -119,7 +118,6 @@ export const authSlice = createSlice({
                 state.isLoading = true;
                 state.error = null;
             })
-            // Common rejected state
             .addCase(loginUser.rejected, (state, action) => {
                 state.isLoading = false;
                 state.error = action.payload as string;
@@ -128,7 +126,6 @@ export const authSlice = createSlice({
                 state.isLoading = false;
                 state.error = action.payload as string;
             })
-            // Fulfilled states
             .addCase(loginUser.fulfilled, (state, action) => {
                 state.isLoading = false;
                 state.user = action.payload.user;

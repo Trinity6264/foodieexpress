@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAppSelector } from '@/store/hooks';
 
 export default function DashboardLayout({
@@ -11,6 +11,8 @@ export default function DashboardLayout({
 }) {
     const router = useRouter();
     const { user, restaurantInfo, isLoading } = useAppSelector((state) => state.auth);
+    const pathname = usePathname(); // Get current pathname to check current route
+
 
     useEffect(() => {
         // Wait until the initial loading is complete
@@ -27,7 +29,12 @@ export default function DashboardLayout({
         else if (!restaurantInfo) {
             router.push('/restaurant-setup');
         }
-    }, [user, restaurantInfo, isLoading, router]);
+        // Step 4: If user is logged in, HAS restaurant info, AND is currently on the setup page:
+        //    - Redirect them to the main dashboard info page. This handles the successful setup.
+        else if (user && restaurantInfo && pathname === '/restaurant-setup') {
+            router.push('/dashboard/restaurant-info');
+        }
+    }, [user, restaurantInfo, isLoading, router, pathname]);
 
     // While loading auth state or if the user is not properly authenticated,
     // show a loading spinner. This prevents the dashboard content from
