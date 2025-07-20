@@ -77,7 +77,6 @@ const RestaurantSetupPage = () => {
             await setDoc(doc(db, "restaurants", user.uid), newRestaurantData);
 
             alert("Restaurant information saved successfully!");
-            // dispatch({ type: 'auth/setRestaurantInfo', payload: newRestaurantData });
             dispatch(setRestaurantInfo({ ...newRestaurantData }));
             router.push('/dashboard/restaurant-info');
             return;
