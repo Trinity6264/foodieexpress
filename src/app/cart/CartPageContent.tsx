@@ -47,11 +47,17 @@ const CartPageContent = () => { // Renamed from CartPage to CartPageContent
         firstname: "Alexander",
         lastname: "Amoah",
         currency: "GHS",
-        publicKey: process.env.PAYSTACK_PUBLIC_KEY ?? "",
+        publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY ?? "",
     };
     const initializePayment = usePaystackPayment(config);
     const handlePlaceOrder = async () => {
-        initializePayment({ onSuccess, onClose })
+        try {
+            initializePayment({ onSuccess, onClose })
+
+        } catch (error) {
+            console.error('Payment initialization failed:', error);
+            alert('Failed to initialize payment. Please try again later.');
+        }
     };
 
     if (cartItems.length === 0) {
