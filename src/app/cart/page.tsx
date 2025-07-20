@@ -14,23 +14,52 @@ import {
     CartItem as CartItemType,
 } from '@/store/features/cartSlice';
 import Link from 'next/link';
+import { usePaystackPayment } from 'react-paystack';
+
 
 const CartPage = () => {
     const router = useRouter();
     const dispatch = useAppDispatch();
+    const quantity = useAppSelector((state) => state.cart.items.length);
 
+
+
+    const onSuccess = (reference: string) => {
+        // Implementation for whatever you want to do with reference and after success call.
+        alert(`Order placed successfully for ${reference}`);
+        dispatch(clearCart());
+        router.push('/');
+        console.log(reference);
+    };
+
+    // you can call this function anything
+    const onClose = () => {
+
+        console.log('closed')
+    }
     // Get all cart data directly from the Redux store
     const cartItems = useAppSelector(selectCartItems);
     const subtotal = useAppSelector(selectCartTotal);
 
+
+
     const deliveryFee = 5.00; // Example fee
     const serviceFee = 2.50; // Example fee
     const total = subtotal + deliveryFee + serviceFee;
-
-    const handlePlaceOrder = () => {
-        alert('Order placed successfully!');
-        dispatch(clearCart());
-        router.push('/');
+    const config = {
+        reference: (new Date()).getTime().toString(),
+        email: "amoahtnt6@gmail.com",
+        amount: total * 100,
+        phone: "0558060860",
+        quantity: quantity,
+        firstname: "Alexander",
+        lastname: "Amoah",
+        currency: "GHS",
+        publicKey: process.env.PAYSTACK_PUBLIC_KEY ?? "",
+    };
+    const initializePayment = usePaystackPayment(config);
+    const handlePlaceOrder = async () => {
+        initializePayment({ onSuccess, onClose })
     };
 
     if (cartItems.length === 0) {
