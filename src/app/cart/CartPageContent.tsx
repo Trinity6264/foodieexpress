@@ -21,7 +21,8 @@ const CartPageContent = () => { // Renamed from CartPage to CartPageContent
     const router = useRouter();
     const dispatch = useAppDispatch();
     const quantity = useAppSelector((state) => state.cart.items.length);
-    const user = useAppSelector((state => state.auth.user)); // Assuming you have a user in your auth state
+    const user = useAppSelector((state => state.auth.user));
+    
 
 
     const onSuccess = (reference: string) => {
@@ -42,12 +43,12 @@ const CartPageContent = () => { // Renamed from CartPage to CartPageContent
     const total = subtotal + deliveryFee + serviceFee;
     const config = {
         reference: (new Date()).getTime().toString(),
-        email: "amoahtnt6@gmail.com",
+        email: user?.email || '',
         amount: total * 100,
-        phone: "0558060860",
+        phone: user?.phoneNumber || "0558060860",
         quantity: quantity,
-        firstname: "Alexander",
-        lastname: "Amoah",
+        firstname: user?.displayName || "Test",
+        lastname: "User",
         currency: "GHS",
         publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY ?? "",
     };

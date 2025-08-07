@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { RestaurantInfoInterface } from '@/interfaces/RestaurantInfoInterface';
 import RestaurantCard from '../RestaurantCard';
-import { collection, getDocs, query, } from 'firebase/firestore';
+import { collection, getDocs, limit, query, where } from 'firebase/firestore';
 import { db } from '@/firebase/init';
 
 // This is now an async component to allow for server-side data fetching
@@ -11,8 +11,8 @@ const FeaturedRestaurantSection = async () => {
     const getFeaturedRestaurants = async (): Promise<RestaurantInfoInterface[]> => {
         try {
             const restaurantsCol = collection(db, 'restaurants');
-            // Create a query to get only documents where 'featured' is true
-            const q = query(restaurantsCol);
+            // Create a query to get only documents where 'isVendor' is true
+            const q = query(restaurantsCol, where('isVendor', '==', true), limit(4));
             const querySnapshot = await getDocs(q);
 
             if (querySnapshot.empty) {

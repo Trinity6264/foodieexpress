@@ -24,6 +24,11 @@ export default function DashboardLayout({
         if (!user) {
             router.push('/login');
         }
+        if (user && !restaurantInfo?.isVendor) {
+            // If the user is logged in but has not set up their restaurant,
+            // redirect them to the restaurant setup page.
+            router.push('/');
+        }
         // If the user is logged in but has not set up their restaurant,
         // redirect them to the setup page.
         else if (!restaurantInfo) {

@@ -1,4 +1,4 @@
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/firebase/init';
 import { RestaurantInfoInterface } from '@/interfaces/RestaurantInfoInterface';
 import RestaurantList from '@/components/RestaurantList';
@@ -10,7 +10,9 @@ const RestaurantsPage = async () => {
     const fetchAllRestaurants = async (): Promise<RestaurantInfoInterface[]> => {
         try {
             const restaurantsCollection = collection(db, 'restaurants');
-            const querySnapshot = await getDocs(restaurantsCollection);
+            const q = query(restaurantsCollection, where('isVendor', '==', true));
+
+            const querySnapshot = await getDocs(q);
 
             const restaurants = querySnapshot.docs.map(doc => ({
                 id: doc.id,
