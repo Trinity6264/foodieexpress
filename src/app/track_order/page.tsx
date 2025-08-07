@@ -299,19 +299,19 @@ const TrackOrder = () => {
             <div className="border-t border-gray-200 mt-4 pt-4 space-y-2">
                 <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Subtotal</span>
-                    <span>₵{(orderData.total - orderData.delivery.fee - 2.50).toFixed(2)}</span>
+                    <span className='text-black'>₵{(orderData.total - orderData.delivery.fee - 2.50).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Delivery Fee</span>
-                    <span>₵{orderData.delivery.fee.toFixed(2)}</span>
+                    <span className='text-black'>₵{orderData.delivery.fee.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Service Fee</span>
-                    <span>₵2.50</span>
+                    <span className='text-black'>₵2.50</span>
                 </div>
-                <div className="flex justify-between font-semibold">
+                <div className="flex text-gray-600 justify-between font-semibold">
                     <span>Total</span>
-                    <span>₵{orderData.total.toFixed(2)}</span>
+                    <span className='text-black'>₵{orderData.total.toFixed(2)}</span>
                 </div>
                 <div className="text-sm text-gray-600">
                     Paid via {orderData.paymentMethod}
@@ -320,23 +320,23 @@ const TrackOrder = () => {
         </div>
     );
 
-    const ActionButtons = () => (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="space-y-3">
-                <button className="w-full bg-orange-600 text-white py-3 rounded-lg hover:bg-orange-700 transition-colors font-semibold">
-                    Order Again
-                </button>
-                <div className="grid grid-cols-2 gap-3">
-                    <button className="px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
-                        Get Help
-                    </button>
-                    <button className="px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
-                        Rate Order
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
+    // const ActionButtons = () => (
+    //     <div className="bg-white rounded-lg border border-gray-200 p-6">
+    //         <div className="space-y-3">
+    //             <button className="w-full bg-orange-600 text-white py-3 rounded-lg hover:bg-orange-700 transition-colors font-semibold">
+    //                 Order Again
+    //             </button>
+    //             <div className="grid grid-cols-2 gap-3">
+    //                 <button className="px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
+    //                     Get Help
+    //                 </button>
+    //                 <button className="px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
+    //                     Rate Order
+    //                 </button>
+    //             </div>
+    //         </div>
+    //     </div>
+    // );
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -348,7 +348,7 @@ const TrackOrder = () => {
                 <DriverInfo />
                 <DeliveryInfo />
                 <OrderItems />
-                <ActionButtons />
+                {/* <ActionButtons /> */}
             </div>
         </div>
     );

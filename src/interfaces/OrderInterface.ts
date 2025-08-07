@@ -16,6 +16,7 @@ export interface Order {
     customerLocation: string; // This could be an address or area
     totalAmount: number;
     status: 'Pending' | 'Preparing' | 'Ready' | 'Out for Delivery' | 'Delivered' | 'Cancelled';
+    trackingStatus: 1 | 2 | 3 | 4 | 5; // 1: Order Placed, 2: Preparing, 3: Ready for Pickup, 4: On the Way, 5: Delivered
     paymentStatus: 'Pending' | 'Paid' | 'Failed';
     paymentReference?: string;
     orderTime: Timestamp;

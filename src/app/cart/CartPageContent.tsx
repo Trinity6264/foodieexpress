@@ -60,6 +60,7 @@ const CartPageContent = () => { // Renamed from CartPage to CartPageContent
                 customerLocation: deliveryLocation.trim(), // Use the user-provided location
                 totalAmount: total,
                 status: 'Pending' as const,
+                trackingStatus: 1 as const, // 1: Order Placed (initial status)
                 orderTime: Timestamp.now(),
                 items: orderItems,
                 paymentStatus: 'Pending' as const
