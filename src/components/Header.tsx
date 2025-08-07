@@ -1,15 +1,39 @@
 // src/components/Header.tsx
 'use client'
-import { ChefHat, Menu, X, ShoppingCart, User } from "lucide-react"
-import { useState } from "react";
+import { ChefHat, Menu, X, ShoppingCart, User, ChevronDown, Clock, History, LogOut, Settings } from "lucide-react"
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { useAppSelector } from '@/store/hooks';
+import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { selectCartItemCount } from '@/store/features/cartSlice';
+import { logout } from '@/store/features/authSlice';
 
 const Header = () => {
     const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
+    const [isCartDropdownOpen, setIsCartDropdownOpen] = useState<boolean>(false);
     const { user } = useAppSelector((state) => state.auth);
     const cartItemCount = useAppSelector(selectCartItemCount);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    const dispatch = useAppDispatch();
+
+    // Logout handler
+    const handleLogout = () => {
+        dispatch(logout());
+        setIsCartDropdownOpen(false);
+    };
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsCartDropdownOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
     return (
         <header className="bg-white shadow-lg sticky top-0 z-50 ">
@@ -38,14 +62,65 @@ const Header = () => {
                                     <User className="w-5 h-5" />
                                     <span className="font-medium truncate max-w-32">{user.email}</span>
                                 </div>
-                                <Link href="/cart" className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                                    <ShoppingCart className="w-6 h-6 text-gray-600" />
-                                    {cartItemCount > 0 && (
-                                        <span className="absolute -top-1 -right-1 bg-orange-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                                            {cartItemCount}
-                                        </span>
+
+                                {/* Cart Dropdown */}
+                                <div className="relative" ref={dropdownRef}>
+                                    <button
+                                        onClick={() => setIsCartDropdownOpen(!isCartDropdownOpen)}
+                                        className="relative cursor-pointer p-2 hover:bg-gray-100 rounded-lg transition-colors flex items-center space-x-1"
+                                    >
+                                        <Settings className="w-6 h-6 text-gray-600" />
+                                        <ChevronDown className="w-4 h-4 text-gray-600" />
+                                        {cartItemCount > 0 && (
+                                            <span className="absolute -top-1 -right-1 bg-orange-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                                                {cartItemCount}
+                                            </span>
+                                        )}
+                                    </button>
+
+                                    {/* Dropdown Menu */}
+                                    {isCartDropdownOpen && (
+                                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                                            <Link
+                                                href="/cart"
+                                                className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors"
+                                                onClick={() => setIsCartDropdownOpen(false)}
+                                            >
+                                                <ShoppingCart className="w-4 h-4 mr-3" />
+                                                <span>Cart</span>
+                                                {cartItemCount > 0 && (
+                                                    <span className="ml-auto bg-orange-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                                                        {cartItemCount}
+                                                    </span>
+                                                )}
+                                            </Link>
+                                            <Link
+                                                href="/track_order"
+                                                className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors"
+                                                onClick={() => setIsCartDropdownOpen(false)}
+                                            >
+                                                <Clock className="w-4 h-4 mr-3" />
+                                                <span>Pending Orders</span>
+                                            </Link>
+                                            <Link
+                                                href="/order-history"
+                                                className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors"
+                                                onClick={() => setIsCartDropdownOpen(false)}
+                                            >
+                                                <History className="w-4 h-4 mr-3" />
+                                                <span>Order History</span>
+                                            </Link>
+                                            <div className="border-t border-gray-200 my-2"></div>
+                                            <button
+                                                onClick={handleLogout}
+                                                className="flex items-center w-full px-4 py-2 text-red-600 hover:bg-red-50 transition-colors text-left"
+                                            >
+                                                <LogOut className="w-4 h-4 mr-3" />
+                                                <span>Logout</span>
+                                            </button>
+                                        </div>
                                     )}
-                                </Link>
+                                </div>
                             </>
                         ) : (
                             // Unauthenticated user section
@@ -96,6 +171,22 @@ const Header = () => {
                                                 </span>
                                             )}
                                         </Link>
+                                        <Link href="/track_order" className="flex items-center text-gray-700 hover:text-orange-600 font-medium">
+                                            <Clock className="w-5 h-5 mr-2" />
+                                            Pending Orders
+                                        </Link>
+                                        <Link href="/order-history" className="flex items-center text-gray-700 hover:text-orange-600 font-medium">
+                                            <History className="w-5 h-5 mr-2" />
+                                            Order History
+                                        </Link>
+                                        <div className="border-t border-gray-200 my-2"></div>
+                                        <button
+                                            onClick={handleLogout}
+                                            className="flex items-center w-full text-red-600 hover:text-red-700 font-medium text-left"
+                                        >
+                                            <LogOut className="w-5 h-5 mr-2" />
+                                            Logout
+                                        </button>
                                     </>
                                 ) : (
                                     // Unauthenticated user mobile section

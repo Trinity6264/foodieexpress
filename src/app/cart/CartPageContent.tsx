@@ -1,8 +1,8 @@
 'use client'
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Minus, Plus, Trash2, ArrowLeft, ChefHat } from 'lucide-react';
+import { Minus, Plus, Trash2, ArrowLeft, ChefHat,  } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import {
     selectCartItems,
@@ -15,25 +15,99 @@ import {
 } from '@/store/features/cartSlice';
 import Link from 'next/link';
 import { usePaystackPayment } from 'react-paystack';
+import { collection, addDoc, doc, updateDoc, Timestamp } from 'firebase/firestore';
+import { db } from '@/firebase/init';
+import { OrderItem } from '@/interfaces/OrderInterface';
 
+// Define PayStack payment reference interface
+interface PaystackReference {
+    reference: string;
+    status?: string;
+    trans?: string;
+    transaction?: string;
+    orderId?: string;
+}
 
 const CartPageContent = () => { // Renamed from CartPage to CartPageContent
     const router = useRouter();
     const dispatch = useAppDispatch();
     const quantity = useAppSelector((state) => state.cart.items.length);
     const user = useAppSelector((state => state.auth.user));
+    const currentRestaurantId = useAppSelector((state) => state.cart.currentRestaurantId);
+    
+    // State for delivery location
+    const [deliveryLocation, setDeliveryLocation] = useState('');
+    const [locationError, setLocationError] = useState('');
     
 
+    // Function to save order to Firestore
+    const saveOrderToFirestore = async (): Promise<string | null> => {
+        if (!user) return null;
 
-    const onSuccess = (reference: string) => {
-        alert(`Order placed successfully for ${reference}`);
+        try {
+            const orderItems: OrderItem[] = cartItems.map(item => ({
+                id: item.id,
+                name: item.name,
+                quantity: item.quantity,
+                price: item.price,
+                image: item.image
+            }));
+
+            const orderData = {
+                userId: user.uid,
+                vendorId: currentRestaurantId, // Add vendor/restaurant ID
+                customerName: user.displayName || "Guest User",
+                customerLocation: deliveryLocation.trim(), // Use the user-provided location
+                totalAmount: total,
+                status: 'Pending' as const,
+                orderTime: Timestamp.now(),
+                items: orderItems,
+                paymentStatus: 'Pending' as const
+            };
+
+            const ordersCollection = collection(db, 'orders');
+            const docRef = await addDoc(ordersCollection, orderData);
+            
+            console.log('Order saved with ID:', docRef.id);
+            return docRef.id;
+        } catch (error) {
+            console.error('Error saving order:', error);
+            alert('Failed to create order. Please try again.');
+            return null;
+        }
+    };
+
+    // Function to update order status after payment
+    const updateOrderStatus = async (orderId: string, paymentReference: string, status: 'Paid' | 'Failed') => {
+        try {
+            const orderRef = doc(db, 'orders', orderId);
+            await updateDoc(orderRef, {
+                paymentStatus: status,
+                paymentReference: paymentReference,
+                updatedAt: Timestamp.now()
+            });
+            console.log(`Order ${orderId} payment status updated to ${status}`);
+        } catch (error) {
+            console.error('Error updating order status:', error);
+        }
+    };
+
+    const onSuccess = async (reference: PaystackReference) => {
+        const paymentReference = reference.reference || reference;
+        
+        // Update order status to paid
+        if (reference.orderId) {
+            await updateOrderStatus(reference.orderId, paymentReference.toString(), 'Paid');
+        }
+        
+        alert(`Payment successful! Reference: ${paymentReference}`);
         dispatch(clearCart());
-        router.push('/');
-        console.log(reference);
+        router.push('/track_order');
+        console.log('Payment successful:', reference);
     };
 
     const onClose = () => {
-        console.log('closed')
+        console.log('Payment modal closed');
     }
     const cartItems = useAppSelector(selectCartItems);
     const subtotal = useAppSelector(selectCartTotal);
@@ -53,15 +127,42 @@ const CartPageContent = () => { // Renamed from CartPage to CartPageContent
         publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY ?? "",
     };
     const initializePayment = usePaystackPayment(config);
+    
     const handlePlaceOrder = async () => {
+        // Clear previous location error
+        setLocationError('');
+
         if (!user) {
             alert("You must be logged in to place an order.");
             router.push('/login');
             return;
         }
 
+        if (!currentRestaurantId) {
+            alert("Unable to identify the restaurant. Please try adding items to cart again.");
+            return;
+        }
+
+        // Validate delivery location
+        if (!deliveryLocation.trim()) {
+            setLocationError('Please enter your delivery location');
+            return;
+        }
+
         try {
-            initializePayment({ onSuccess, onClose })
+            // First, save the order to Firestore
+            const orderId = await saveOrderToFirestore();
+            
+            if (!orderId) {
+                alert('Failed to create order. Please try again.');
+                return;
+            }
+
+            // Initialize payment with order ID attached
+            initializePayment({ 
+                onSuccess: (reference: PaystackReference) => onSuccess({ ...reference, orderId }), 
+                onClose 
+            });
         } catch (error) {
             console.error('Payment initialization failed:', error);
             alert('Failed to initialize payment. Please try again later.');
@@ -113,11 +214,46 @@ const CartPageContent = () => { // Renamed from CartPage to CartPageContent
                 <div className="md:col-span-1">
                     <div className="bg-white rounded-lg border p-6 space-y-4">
                         <h3 className="text-lg font-semibold text-black">Order Summary</h3>
+                        
+                        {/* Delivery Location Input */}
+                        <div className="space-y-2">
+                            <label htmlFor="deliveryLocation" className="block text-sm font-medium text-gray-700">
+                                Delivery Location *
+                            </label>
+                            <input
+                                type="text"
+                                id="deliveryLocation"
+                                value={deliveryLocation}
+                                onChange={(e) => {
+                                    setDeliveryLocation(e.target.value);
+                                    if (locationError) setLocationError(''); // Clear error when user types
+                                }}
+                                placeholder="Enter your delivery address..."
+                                className={`w-full px-3 text-black py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
+                                    locationError ? 'border-red-500' : 'border-gray-300'
+                                }`}
+                                required
+                            />
+                            {locationError && (
+                                <p className="text-red-500 text-sm">{locationError}</p>
+                            )}
+                        </div>
+                        
                         <div className="flex justify-between text-gray-600"><p>Subtotal</p><p>₵{subtotal.toFixed(2)}</p></div>
                         <div className="flex justify-between text-gray-600"><p>Delivery Fee</p><p>₵{deliveryFee.toFixed(2)}</p></div>
                         <div className="flex justify-between text-gray-600"><p>Service Fee</p><p>₵{serviceFee.toFixed(2)}</p></div>
                         <div className="border-t pt-4 flex justify-between text-gray-700 font-bold"><p>Total</p><p>₵{total.toFixed(2)}</p></div>
-                        <button onClick={handlePlaceOrder} className="w-full bg-orange-600 cursor-pointer text-white py-3 rounded-lg hover:bg-orange-700 font-semibold">Place Order</button>
+                        <button 
+                            onClick={handlePlaceOrder} 
+                            className={`w-full py-3 rounded-lg font-semibold transition-colors ${
+                                deliveryLocation.trim() 
+                                    ? 'bg-orange-600 text-white hover:bg-orange-700 cursor-pointer' 
+                                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            }`}
+                            disabled={!deliveryLocation.trim()}
+                        >
+                            Place Order
+                        </button>
                     </div>
                 </div>
             </div>
