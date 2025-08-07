@@ -15,9 +15,10 @@ import {
 } from '@/store/features/cartSlice';
 import Link from 'next/link';
 import { usePaystackPayment } from 'react-paystack';
-import { collection, addDoc, doc, updateDoc, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc, Timestamp, getDoc } from 'firebase/firestore';
 import { db } from '@/firebase/init';
-import { OrderItem } from '@/interfaces/OrderInterface';
+import { OrderItem, RestaurantInfo, DeliveryInfo, TaxBreakdown } from '@/interfaces/OrderInterface';
+import { RestaurantInfoInterface } from '@/interfaces/RestaurantInfoInterface';
 
 // Define PayStack payment reference interface
 interface PaystackReference {
@@ -26,6 +27,10 @@ interface PaystackReference {
     trans?: string;
     transaction?: string;
     orderId?: string;
+    channel?: string; // Payment method: card, bank, ussd, qr, mobile_money, bank_transfer
+    gateway_response?: string;
+    paid_at?: string;
+    created_at?: string;
 }
 
 const CartPageContent = () => { // Renamed from CartPage to CartPageContent
@@ -38,6 +43,8 @@ const CartPageContent = () => { // Renamed from CartPage to CartPageContent
     // State for delivery location
     const [deliveryLocation, setDeliveryLocation] = useState('');
     const [locationError, setLocationError] = useState('');
+    const [deliveryInstructions, setDeliveryInstructions] = useState('');
+    const [paymentMethod, setPaymentMethod] = useState('PayStack Payment');
     
 
     // Function to save order to Firestore
@@ -53,16 +60,70 @@ const CartPageContent = () => { // Renamed from CartPage to CartPageContent
                 image: item.image
             }));
 
+            // Generate unique order number
+            const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+            
+            // Calculate estimated delivery time (45 minutes from now as default)
+            const estimatedDelivery = new Date(Date.now() + 45 * 60 * 1000);
+
+            // Fetch restaurant information
+            let restaurantInfo: RestaurantInfo = {
+                name: "Restaurant Name", // Default fallback
+                rating: 4.5,
+                phone: "+233 50 000 0000",
+                address: "Restaurant Address"
+            };
+
+            if (currentRestaurantId) {
+                try {
+                    const restaurantDocRef = doc(db, 'restaurants', currentRestaurantId);
+                    const restaurantDoc = await getDoc(restaurantDocRef);
+                    
+                    if (restaurantDoc.exists()) {
+                        const restaurantData = restaurantDoc.data() as RestaurantInfoInterface;
+                        restaurantInfo = {
+                            name: restaurantData.name,
+                            rating: restaurantData.rating,
+                            phone: restaurantData.phone,
+                            address: restaurantData.address
+                        };
+                    }
+                } catch (error) {
+                    console.error('Error fetching restaurant info:', error);
+                }
+            }
+
+            const deliveryInfo: DeliveryInfo = {
+                address: deliveryLocation.trim(),
+                instructions: deliveryInstructions.trim(),
+                fee: 0,
+            };
+
+            const taxBreakdown: TaxBreakdown = {
+                subtotal: subtotal,
+                vatRate: vatRate,
+                vatAmount: vatAmount,
+                nhilRate: nhilRate,
+                nhilAmount: nhilAmount,
+                getfundRate: getfundRate,
+                getfundAmount: getfundAmount,
+                totalTaxes: totalTaxes,
+                serviceFee: serviceFee
+            };
+
             const orderData = {
+                orderNumber: orderNumber,
                 userId: user.uid,
-                vendorId: currentRestaurantId, // Add vendor/restaurant ID
-                customerName: user.displayName || "Guest User",
-                customerLocation: deliveryLocation.trim(), // Use the user-provided location
-                totalAmount: total,
-                status: 'Pending' as const,
+                vendorId: currentRestaurantId,
                 trackingStatus: 1 as const, // 1: Order Placed (initial status)
-                orderTime: Timestamp.now(),
+                placedAt: Timestamp.now(),
+                estimatedDelivery: Timestamp.fromDate(estimatedDelivery),
+                restaurant: restaurantInfo,
+                delivery: deliveryInfo,
                 items: orderItems,
+                taxes: taxBreakdown,
+                total: total,
+                paymentMethod: paymentMethod, // Use dynamic payment method
                 paymentStatus: 'Pending' as const
             };
 
@@ -79,14 +140,35 @@ const CartPageContent = () => { // Renamed from CartPage to CartPageContent
     };
 
     // Function to update order status after payment
-    const updateOrderStatus = async (orderId: string, paymentReference: string, status: 'Paid' | 'Failed') => {
+    const updateOrderStatus = async (orderId: string, paymentReference: string, status: 'Paid' | 'Failed', paymentChannel?: string) => {
         try {
-            const orderRef = doc(db, 'orders', orderId);
-            await updateDoc(orderRef, {
+            const updateData: {
+                paymentStatus: 'Paid' | 'Failed';
+                paymentReference: string;
+                updatedAt: Timestamp;
+                paymentMethod?: string;
+            } = {
                 paymentStatus: status,
                 paymentReference: paymentReference,
                 updatedAt: Timestamp.now()
-            });
+            };
+
+            // If payment was successful and we have channel info, update payment method
+            if (status === 'Paid' && paymentChannel) {
+                const paymentMethodMap: Record<string, string> = {
+                    'card': 'Credit/Debit Card',
+                    'bank': 'Bank Transfer',
+                    'ussd': 'USSD',
+                    'qr': 'QR Code',
+                    'mobile_money': 'Mobile Money',
+                    'bank_transfer': 'Bank Transfer'
+                };
+                updateData.paymentMethod = paymentMethodMap[paymentChannel] || `PayStack - ${paymentChannel}`;
+            }
+
+            const orderRef = doc(db, 'orders', orderId);
+            await updateDoc(orderRef, updateData);
+            
             console.log(`Order ${orderId} payment status updated to ${status}`);
         } catch (error) {
             console.error('Error updating order status:', error);
@@ -96,9 +178,22 @@ const CartPageContent = () => { // Renamed from CartPage to CartPageContent
     const onSuccess = async (reference: PaystackReference) => {
         const paymentReference = reference.reference || reference;
         
-        // Update order status to paid
+        // Update order status to paid with payment method info
         if (reference.orderId) {
-            await updateOrderStatus(reference.orderId, paymentReference.toString(), 'Paid');
+            await updateOrderStatus(reference.orderId, paymentReference.toString(), 'Paid', reference.channel);
+        }
+        
+        // Update local payment method state for UI
+        if (reference.channel) {
+            const paymentMethodMap: Record<string, string> = {
+                'card': 'Credit/Debit Card',
+                'bank': 'Bank Transfer',
+                'ussd': 'USSD',
+                'qr': 'QR Code',
+                'mobile_money': 'Mobile Money',
+                'bank_transfer': 'Bank Transfer'
+            };
+            setPaymentMethod(paymentMethodMap[reference.channel] || `PayStack - ${reference.channel}`);
         }
         
         alert(`Payment successful! Reference: ${paymentReference}`);
@@ -113,16 +208,24 @@ const CartPageContent = () => { // Renamed from CartPage to CartPageContent
     const cartItems = useAppSelector(selectCartItems);
     const subtotal = useAppSelector(selectCartTotal);
 
-    const deliveryFee = 5.00; // Example fee
+    const vatRate = 0.15; // 15% VAT in Ghana
+    const nhilRate = 0.025; // 2.5% NHIL (National Health Insurance Levy)
+    const getfundRate = 0.025; // 2.5% GETFund Levy
+    
+    const vatAmount = subtotal * vatRate;
+    const nhilAmount = subtotal * nhilRate;
+    const getfundAmount = subtotal * getfundRate;
+    const totalTaxes = vatAmount + nhilAmount + getfundAmount;
+    
     const serviceFee = 2.50; // Example fee
-    const total = subtotal + deliveryFee + serviceFee;
+    const total = subtotal + totalTaxes + serviceFee;
     const config = {
         reference: (new Date()).getTime().toString(),
         email: user?.email || '',
         amount: total * 100,
         phone: user?.phoneNumber || "0558060860",
         quantity: quantity,
-        firstname: user?.displayName || "Test",
+        firstname: user?.displayName || "Guest",
         lastname: "User",
         currency: "GHS",
         publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY ?? "",
@@ -208,7 +311,7 @@ const CartPageContent = () => { // Renamed from CartPage to CartPageContent
                     <h1 className="text-xl font-bold text-gray-900">Your Cart</h1>
                 </div>
             </div>
-            <div className="max-w-4xl mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div className="md:col-span-2 space-y-4">
                     {cartItems.map(item => <CartItemRow key={item.id} item={item} />)}
                 </div>
@@ -239,9 +342,27 @@ const CartPageContent = () => { // Renamed from CartPage to CartPageContent
                                 <p className="text-red-500 text-sm">{locationError}</p>
                             )}
                         </div>
+
+                        {/* Delivery Instructions Input */}
+                        <div className="space-y-2">
+                            <label htmlFor="deliveryInstructions" className="block text-sm font-medium text-gray-700">
+                                Delivery Instructions
+                            </label>
+                            <textarea
+                                id="deliveryInstructions"
+                                value={deliveryInstructions}
+                                onChange={(e) => setDeliveryInstructions(e.target.value)}
+                                placeholder="e.g., Leave at the door, Call when you arrive, Ring the bell..."
+                                className="w-full px-3 text-black py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                                rows={3}
+                            />
+                            <p className="text-xs text-gray-500">Optional: Provide specific instructions for the delivery driver</p>
+                        </div>
                         
                         <div className="flex justify-between text-gray-600"><p>Subtotal</p><p>₵{subtotal.toFixed(2)}</p></div>
-                        <div className="flex justify-between text-gray-600"><p>Delivery Fee</p><p>₵{deliveryFee.toFixed(2)}</p></div>
+                        <div className="flex justify-between text-gray-600"><p>VAT (15%)</p><p>₵{vatAmount.toFixed(2)}</p></div>
+                        <div className="flex justify-between text-gray-600"><p>NHIL (2.5%)</p><p>₵{nhilAmount.toFixed(2)}</p></div>
+                        <div className="flex justify-between text-gray-600"><p>GETFund Levy (2.5%)</p><p>₵{getfundAmount.toFixed(2)}</p></div>
                         <div className="flex justify-between text-gray-600"><p>Service Fee</p><p>₵{serviceFee.toFixed(2)}</p></div>
                         <div className="border-t pt-4 flex justify-between text-gray-700 font-bold"><p>Total</p><p>₵{total.toFixed(2)}</p></div>
                         <button 
