@@ -63,7 +63,7 @@ const Header = () => {
                                     <span className="font-medium truncate max-w-32">{user.email}</span>
                                 </div>
 
-                                {/* Cart Dropdown */}
+                                {/* Settings Dropdown */}
                                 <div className="relative" ref={dropdownRef}>
                                     <button
                                         onClick={() => setIsCartDropdownOpen(!isCartDropdownOpen)}
