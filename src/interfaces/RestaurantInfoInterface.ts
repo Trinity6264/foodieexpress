@@ -28,6 +28,7 @@ export interface RestaurantInfoInterface {
   phone: string;
   address: string;
   description: string;
+  isVendor: boolean;
   isOpen: boolean; // This can now represent a general "Open Now" status
   operatingHours: OperatingHours[]; // Add the new property
 }

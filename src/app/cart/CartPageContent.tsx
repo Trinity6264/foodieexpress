@@ -21,6 +21,8 @@ const CartPageContent = () => { // Renamed from CartPage to CartPageContent
     const router = useRouter();
     const dispatch = useAppDispatch();
     const quantity = useAppSelector((state) => state.cart.items.length);
+    const user = useAppSelector((state => state.auth.user)); // Assuming you have a user in your auth state
+
 
     const onSuccess = (reference: string) => {
         alert(`Order placed successfully for ${reference}`);
@@ -51,9 +53,14 @@ const CartPageContent = () => { // Renamed from CartPage to CartPageContent
     };
     const initializePayment = usePaystackPayment(config);
     const handlePlaceOrder = async () => {
+        if (!user) {
+            alert("You must be logged in to place an order.");
+            router.push('/login');
+            return;
+        }
+
         try {
             initializePayment({ onSuccess, onClose })
-
         } catch (error) {
             console.error('Payment initialization failed:', error);
             alert('Failed to initialize payment. Please try again later.');

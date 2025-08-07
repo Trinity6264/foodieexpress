@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { auth, db } from '@/firebase/init';
 import { signInWithEmailAndPassword, User, signOut as firebaseSignOut, createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { RestaurantInfoInterface } from '@/interfaces/RestaurantInfoInterface';
 import { FirebaseError } from 'firebase/app';
 
@@ -68,10 +68,58 @@ export const loginUser = createAsyncThunk(
 
 export const signUpUser = createAsyncThunk(
     'auth/signUpUser',
-    async ({ email, password }: { email: string; password: string }, { rejectWithValue }) => {
+    async ({ email, password, isVendor }: { email: string; password: string; isVendor: boolean }, { rejectWithValue }) => {
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
+            if (isVendor) {
+                // If the user is a vendor, we might want to initialize some restaurant info
+                const restaurantInfo: RestaurantInfoInterface = {
+                    id: user.uid,
+                    userId: user.uid,
+                    name: '',
+                    cuisine: '',
+                    rating: 0,
+                    deliveryTime: '',
+                    deliveryFee: '',
+                    image: '',
+                    specialty: '',
+                    location: '',
+                    featured: false,
+                    minOrder: '',
+                    phone: '',
+                    address: '',
+                    description: '',
+                    isVendor: true,
+                    isOpen: false,
+                    operatingHours: [],
+                };
+                // Here you would typically save the restaurant info to Firestore
+                await setDoc(doc(db, 'restaurants', user.uid), restaurantInfo, { merge: true });
+            } else {
+                // If not a vendor, we can just set an empty restaurant info
+                const restaurantInfo: RestaurantInfoInterface = {
+                    id: user.uid,
+                    userId: user.uid,
+                    name: '',
+                    cuisine: '',
+                    rating: 0,
+                    deliveryTime: '',
+                    deliveryFee: '',
+                    image: '',
+                    specialty: '',
+                    location: '',
+                    featured: false,
+                    minOrder: '',
+                    phone: '',
+                    address: '',
+                    description: '',
+                    isVendor: false,
+                    isOpen: false,
+                    operatingHours: [],
+                };
+                await setDoc(doc(db, 'restaurants', user.uid), restaurantInfo, { merge: true });
+            }
             const serializableUser: SerializableUser = JSON.parse(JSON.stringify(user));
             return { user: serializableUser, restaurantInfo: null };
         } catch (error: unknown) {

@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Mail, Lock, LogIn, UserPlus, AlertCircle, Eye, EyeOff } from 'lucide-react'; // Import Eye and EyeOff icons
+import { Mail, Lock, LogIn, UserPlus, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { loginUser, signUpUser } from '@/store/features/authSlice';
@@ -14,8 +14,9 @@ const AuthForm = ({ isSignUp }: AuthFormProps) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [isVendor, setIsVendor] = useState(false); // New state for the checkbox
     const [formError, setFormError] = useState('');
-    const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
+    const [showPassword, setShowPassword] = useState(false);
 
     const router = useRouter();
     const dispatch = useAppDispatch();
@@ -30,7 +31,8 @@ const AuthForm = ({ isSignUp }: AuthFormProps) => {
                 setFormError("Passwords do not match!");
                 return;
             }
-            dispatch(signUpUser({ email, password }));
+            // Pass the isVendor state to the signUpUser thunk
+            dispatch(signUpUser({ email, password, isVendor }));
         } else {
             dispatch(loginUser({ email, password }));
         }
@@ -38,17 +40,16 @@ const AuthForm = ({ isSignUp }: AuthFormProps) => {
 
     useEffect(() => {
         if (user && !isLoading) {
-            if (restaurantInfo) {
+            if (restaurantInfo?.isVendor) {
                 router.push('/dashboard/restaurant-info');
             } else {
-                router.push('/restaurant-setup');
+                router.push('/');
             }
         }
     }, [user, restaurantInfo, isLoading, router]);
 
     const displayError = formError || serverError;
 
-    // Function to toggle password visibility
     const togglePasswordVisibility = () => {
         setShowPassword(!showPassword);
     };
@@ -93,7 +94,7 @@ const AuthForm = ({ isSignUp }: AuthFormProps) => {
                             <input
                                 id="password"
                                 name="password"
-                                type={showPassword ? 'text' : 'password'} // Dynamically set type
+                                type={showPassword ? 'text' : 'password'}
                                 required
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
@@ -110,27 +111,43 @@ const AuthForm = ({ isSignUp }: AuthFormProps) => {
                             </button>
                         </div>
                         {isSignUp && (
-                            <div className="relative">
-                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                                <input
-                                    id="confirm-password"
-                                    name="confirm-password"
-                                    type={showPassword ? 'text' : 'password'}
-                                    required
-                                    value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                    className="w-full text-black pl-10 pr-10 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500"
-                                    placeholder="Confirm Password"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={togglePasswordVisibility}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
-                                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                                >
-                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                                </button>
-                            </div>
+                            <>
+                                <div className="relative">
+                                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                                    <input
+                                        id="confirm-password"
+                                        name="confirm-password"
+                                        type={showPassword ? 'text' : 'password'}
+                                        required
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                        className="w-full text-black pl-10 pr-10 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500"
+                                        placeholder="Confirm Password"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={togglePasswordVisibility}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                    >
+                                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                    </button>
+                                </div>
+                                {/* New checkbox for vendors */}
+                                <div className="flex items-center">
+                                    <input
+                                        id="is-vendor"
+                                        name="is-vendor"
+                                        type="checkbox"
+                                        checked={isVendor}
+                                        onChange={(e) => setIsVendor(e.target.checked)}
+                                        className="h-4 w-4 rounded text-orange-600 focus:ring-orange-500 border-gray-300"
+                                    />
+                                    <label htmlFor="is-vendor" className="ml-2 block text-sm text-gray-900">
+                                        Sign up as a Vendor
+                                    </label>
+                                </div>
+                            </>
                         )}
                     </div>
                     <div>
