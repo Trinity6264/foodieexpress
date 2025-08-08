@@ -11,7 +11,8 @@ import {
     fetchUserOrders, 
     setSelectedOrder, 
     clearUserOrders,
-    selectUserOrders,
+    removeUserOrder,
+    selectActiveUserOrders,
     selectSelectedOrder,
     selectUserOrdersLoading,
     selectOrdersError
@@ -23,7 +24,7 @@ const TrackOrder = () => {
     const user = useAppSelector((state) => state.auth.user);
     
     // Get state from Redux
-    const orders = useAppSelector(selectUserOrders);
+    const orders = useAppSelector(selectActiveUserOrders);
     const selectedOrder = useAppSelector(selectSelectedOrder);
     const loading = useAppSelector(selectUserOrdersLoading);
     const error = useAppSelector(selectOrdersError);
@@ -84,6 +85,12 @@ const TrackOrder = () => {
                 isRated: true,
                 ratedAt: Timestamp.now()
             });
+
+            // Remove the order from active tracking list
+            dispatch(removeUserOrder(selectedOrder.id));
+
+            // Clear the selected order since it's no longer active
+            dispatch(setSelectedOrder(null));
 
             // Close modal and reset form
             setShowRatingModal(false);

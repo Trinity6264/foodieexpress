@@ -300,6 +300,8 @@ export const selectUserOrderById = (state: { orders: OrderState }, orderId: stri
     state.orders.userOrders.find(order => order.id === orderId);
 export const selectPendingUserOrders = (state: { orders: OrderState }) => 
     state.orders.userOrders.filter(order => order.trackingStatus < 5);
+export const selectActiveUserOrders = (state: { orders: OrderState }) => 
+    state.orders.userOrders.filter(order => order.trackingStatus < 5 || (order.trackingStatus === 5 && !order.isRated));
 export const selectUserOrdersByRestaurant = (state: { orders: OrderState }, restaurantId: string) => 
     state.orders.userOrders.filter(order => order.vendorId === restaurantId);
 
