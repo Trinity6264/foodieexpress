@@ -72,6 +72,7 @@ const RestaurantSetupPage = () => {
                 userId: user.uid,
                 rating: 0,
                 featured: false,
+                isVendor: true,
             };
 
             await setDoc(doc(db, "restaurants", user.uid), newRestaurantData);

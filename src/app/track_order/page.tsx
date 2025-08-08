@@ -2,8 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Clock, MapPin, Phone, MessageCircle, CheckCircle, Package, Car, ChefHat, Star, Receipt } from 'lucide-react';
-import { Timestamp } from 'firebase/firestore';
+import { ArrowLeft, Clock, MapPin, Phone, MessageCircle, CheckCircle, Package, Car, ChefHat, Star, Receipt, ThumbsUp, X } from 'lucide-react';
+import RatingButton from '@/components/RatingButton';
+import { Timestamp, doc, updateDoc, collection, addDoc } from 'firebase/firestore';
+import { db } from '@/firebase/init';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { 
     fetchUserOrders, 
@@ -27,6 +29,10 @@ const TrackOrder = () => {
     const error = useAppSelector(selectOrdersError);
     
     const [currentTime, setCurrentTime] = useState(new Date());
+    const [showRatingModal, setShowRatingModal] = useState(false);
+    const [rating, setRating] = useState(0);
+    const [review, setReview] = useState('');
+    const [submittingRating, setSubmittingRating] = useState(false);
 
     // Fetch user's orders from Redux
     useEffect(() => {
@@ -52,6 +58,46 @@ const TrackOrder = () => {
         }, 60000);
         return () => clearInterval(timer);
     }, []);
+
+    // Function to submit rating
+    const submitRating = async () => {
+        if (!selectedOrder || !user || rating === 0) return;
+
+        setSubmittingRating(true);
+        try {
+            // Add rating to the ratings collection
+            await addDoc(collection(db, 'ratings'), {
+                orderId: selectedOrder.id,
+                userId: user.uid,
+                vendorId: selectedOrder.vendorId,
+                restaurantName: selectedOrder.restaurant.name,
+                rating: rating,
+                review: review.trim(),
+                createdAt: Timestamp.now(),
+                orderDate: selectedOrder.placedAt,
+                customerName: user.displayName || 'Anonymous'
+            });
+
+            // Update the order to mark it as rated
+            const orderRef = doc(db, 'orders', selectedOrder.id);
+            await updateDoc(orderRef, {
+                isRated: true,
+                ratedAt: Timestamp.now()
+            });
+
+            // Close modal and reset form
+            setShowRatingModal(false);
+            setRating(0);
+            setReview('');
+            
+            alert('Thank you for your rating!');
+        } catch (error) {
+            console.error('Error submitting rating:', error);
+            alert('Failed to submit rating. Please try again.');
+        } finally {
+            setSubmittingRating(false);
+        }
+    };
 
     if (!user) {
         return null; // Will redirect to login
@@ -177,6 +223,87 @@ const TrackOrder = () => {
         });
     };
 
+    // Rating Modal Component
+    const RatingModal = () => {
+        if (!showRatingModal || !selectedOrder) return null;
+
+        return (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-lg max-w-md w-full p-6">
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-semibold text-gray-900">Rate Your Experience</h3>
+                        <button 
+                            onClick={() => setShowRatingModal(false)}
+                            className="text-gray-400 hover:text-gray-600"
+                        >
+                            <X className="w-6 h-6" />
+                        </button>
+                    </div>
+                    
+                    <div className="mb-4">
+                        <p className="text-sm text-gray-600 mb-2">How was your order from {selectedOrder.restaurant.name}?</p>
+                        
+                        {/* Star Rating */}
+                        <div className="flex space-x-1 mb-4">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                                <button
+                                    key={star}
+                                    onClick={() => setRating(star)}
+                                    className={`p-1 transition-colors ${
+                                        star <= rating ? 'text-yellow-400' : 'text-gray-300'
+                                    }`}
+                                >
+                                    <Star className={`w-8 h-8 ${star <= rating ? 'fill-current' : ''}`} />
+                                </button>
+                            ))}
+                        </div>
+                        
+                        {rating > 0 && (
+                            <p className="text-sm text-gray-600 mb-4">
+                                {rating === 1 && "Poor - We're sorry to hear that"}
+                                {rating === 2 && "Fair - Room for improvement"}
+                                {rating === 3 && "Good - Meets expectations"}
+                                {rating === 4 && "Very Good - Above expectations"}
+                                {rating === 5 && "Excellent - Outstanding service!"}
+                            </p>
+                        )}
+                        
+                        {/* Review Text */}
+                        <textarea
+                            value={review}
+                            onChange={(e) => setReview(e.target.value)}
+                            placeholder="Share your thoughts about the food, service, or delivery (optional)..."
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                            rows={3}
+                            maxLength={500}
+                        />
+                        <p className="text-xs text-gray-500 mt-1">{review.length}/500 characters</p>
+                    </div>
+                    
+                    <div className="flex space-x-3">
+                        <button
+                            onClick={() => setShowRatingModal(false)}
+                            className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                        >
+                            Skip
+                        </button>
+                        <button
+                            onClick={submitRating}
+                            disabled={rating === 0 || submittingRating}
+                            className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
+                                rating === 0 || submittingRating
+                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                    : 'bg-orange-600 text-white hover:bg-orange-700'
+                            }`}
+                        >
+                            {submittingRating ? 'Submitting...' : 'Submit Rating'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     const Header = () => (
         <div className="bg-white shadow-sm border-b sticky top-0 z-50">
             <div className="max-w-4xl mx-auto px-4 py-4">
@@ -236,6 +363,25 @@ const TrackOrder = () => {
                     <p className="text-gray-600">
                         Placed at {formatTime(selectedOrder.placedAt)} • Expected by {formatTime(selectedOrder.estimatedDelivery || selectedOrder.placedAt)}
                     </p>
+                    
+                    {/* Rating Button for Delivered Orders */}
+                    {selectedOrder.trackingStatus === 5 && !selectedOrder.isRated && (
+                        <div className="mt-4">
+                            <RatingButton 
+                                onClick={() => setShowRatingModal(true)}
+                            />
+                        </div>
+                    )}
+                    
+                    {/* Already Rated Message */}
+                    {selectedOrder.trackingStatus === 5 && selectedOrder.isRated && (
+                        <div className="mt-4">
+                            <div className="inline-flex items-center px-4 py-2 bg-green-50 text-green-700 rounded-lg">
+                                <ThumbsUp className="w-4 h-4 mr-2" />
+                                Thank you for rating this order!
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Progress Steps */}
@@ -494,6 +640,9 @@ const TrackOrder = () => {
                 <OrderItems />
                 {/* <ActionButtons /> */}
             </div>
+            
+            {/* Rating Modal */}
+            <RatingModal />
         </div>
     );
 };

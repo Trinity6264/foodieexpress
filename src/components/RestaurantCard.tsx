@@ -1,13 +1,18 @@
-import { Clock, MapPin, Star, Truck } from "lucide-react"
+'use client';
+import { Clock, MapPin, Truck } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { RestaurantInfoInterface } from "@/interfaces/RestaurantInfoInterface"
+import StarRating from "./StarRating"
+import useRestaurantRatings from "@/hooks/useRestaurantRatings"
 
 interface RestaurantCardProps {
     restaurant: RestaurantInfoInterface;
 }
 
 const RestaurantCard = ({ restaurant }: RestaurantCardProps) => {
+    const { stats, loading } = useRestaurantRatings(restaurant.id);
+
     return (
         // The link now includes the restaurant's unique ID
         <Link href={`/menu/${restaurant.id}`} key={restaurant.id}>
@@ -34,8 +39,19 @@ const RestaurantCard = ({ restaurant }: RestaurantCardProps) => {
                     </div>
                     <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center">
-                            <Star className="text-yellow-400 fill-current w-4 h-4" />
-                            <span className="ml-1 text-sm font-medium text-gray-900">{restaurant.rating}</span>
+                            {loading ? (
+                                <div className="flex items-center">
+                                    <div className="w-4 h-4 bg-gray-200 rounded animate-pulse mr-1"></div>
+                                    <span className="text-gray-400 text-sm">Loading...</span>
+                                </div>
+                            ) : (
+                                <StarRating
+                                    rating={stats?.averageRating || 0}
+                                    totalRatings={stats?.totalRatings || 0}
+                                    size="sm"
+                                    showRatingText={true}
+                                />
+                            )}
                         </div>
                         <div className="flex items-center text-gray-600">
                             <Clock className="w-4 h-4 mr-1" />

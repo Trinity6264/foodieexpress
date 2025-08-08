@@ -57,7 +57,7 @@ export const fetchUserOrders = createAsyncThunk(
             const ordersQuery = query(
                 collection(db, 'orders'),
                 where('userId', '==', userId),
-                where('trackingStatus', 'in', [1, 2, 3, 4]), // Exclude delivered orders (5)
+                where('trackingStatus', 'in', [1, 2, 3, 4, 5]), // Include all orders, including delivered
                 orderBy('placedAt', 'desc')
             );
 
