@@ -34,8 +34,8 @@ export const fetchRestaurantOrders = createAsyncThunk(
     'orders/fetchRestaurantOrders',
     async (restaurantId: string, { rejectWithValue }) => {
         try {
-            const ordersCol = collection(db, 'restaurants', restaurantId, 'orders');
-            const q = query(ordersCol, orderBy('orderTime', 'desc'));
+            const ordersCol = collection(db, 'orders');
+            const q = query(ordersCol, where('vendorId', '==', restaurantId));
             const querySnapshot = await getDocs(q);
             const orders = querySnapshot.docs.map(doc => ({
                 id: doc.id,
