@@ -1,6 +1,6 @@
 // src/components/Header.tsx
 'use client'
-import { ChefHat, Menu, X, ShoppingCart, User, ChevronDown, Clock, History, LogOut, Settings } from "lucide-react"
+import { ChefHat, Menu, X, ShoppingCart, User, ChevronDown, Clock, History, LogOut, Settings, DollarSign } from "lucide-react"
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
@@ -110,6 +110,14 @@ const Header = () => {
                                                 <History className="w-4 h-4 mr-3" />
                                                 <span>Order History</span>
                                             </Link>
+                                            <Link
+                                                href="/spending"
+                                                className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors"
+                                                onClick={() => setIsCartDropdownOpen(false)}
+                                            >
+                                                <DollarSign className="w-4 h-4 mr-3" />
+                                                <span>Spending Analytics</span>
+                                            </Link>
                                             <div className="border-t border-gray-200 my-2"></div>
                                             <button
                                                 onClick={handleLogout}
@@ -178,6 +186,10 @@ const Header = () => {
                                         <Link href="/order-history" className="flex items-center text-gray-700 hover:text-orange-600 font-medium">
                                             <History className="w-5 h-5 mr-2" />
                                             Order History
+                                        </Link>
+                                        <Link href="/spending" className="flex items-center text-gray-700 hover:text-orange-600 font-medium">
+                                            <DollarSign className="w-5 h-5 mr-2" />
+                                            Spending Analytics
                                         </Link>
                                         <div className="border-t border-gray-200 my-2"></div>
                                         <button

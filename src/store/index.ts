@@ -3,6 +3,7 @@ import authReducer from './features/authSlice';
 import menuReducer from './features/menuSlice';
 import orderReducer from './features/orderSlice';
 import cartReducer from './features/cartSlice';
+import transactionReducer from './features/transactionSlice';
 
 
 
@@ -14,6 +15,7 @@ export const makeStore = () => {
             menu: menuReducer,
             orders: orderReducer, 
             cart: cartReducer,
+            transactions: transactionReducer,
         },
         // Add any middleware here if needed
         middleware: (getDefaultMiddleware) =>

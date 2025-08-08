@@ -210,9 +210,10 @@ const RestaurantInfoPage = () => {
                     </div>
                 </div>
 
-                <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
                     <Link href="/dashboard/menu-management" className="block bg-blue-600 text-white text-center px-6 py-4 rounded-lg hover:bg-blue-700 font-semibold text-lg">Manage Menu</Link>
                     <Link href="/dashboard/order-management" className="block bg-teal-600 text-white text-center px-6 py-4 rounded-lg hover:bg-teal-700 font-semibold text-lg">Manage Orders</Link>
+                    <Link href="/dashboard/earnings" className="block bg-green-600 text-white text-center px-6 py-4 rounded-lg hover:bg-green-700 font-semibold text-lg">View Earnings</Link>
                 </div>
             </div>
         </div>

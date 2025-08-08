@@ -105,7 +105,7 @@ export const fetchUserOrders = createAsyncThunk(
             const ordersQuery = query(
                 collection(db, 'orders'),
                 where('userId', '==', userId),
-                where('trackingStatus', 'in', [1, 2, 3, 4, 5]),
+              
                 orderBy('placedAt', 'desc')
             );
 

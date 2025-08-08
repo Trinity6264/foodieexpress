@@ -58,6 +58,7 @@ export interface Order {
     paymentMethod: string;
     paymentStatus: 'Pending' | 'Paid' | 'Failed';
     paymentReference?: string;
+    transactionId?: string; // Reference to the transaction record
     updatedAt?: Timestamp;
     isRated?: boolean; // Whether the order has been rated by the customer
     ratedAt?: Timestamp; // When the order was rated
