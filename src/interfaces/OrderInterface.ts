@@ -46,7 +46,7 @@ export interface Order {
     userId: string; // The ID of the user who placed the order
     vendorId: string | null; // The ID of the restaurant/vendor
     status: 'preparing' | 'ready' | 'on_the_way' | 'delivered' | 'cancelled';
-    trackingStatus: 1 | 2 | 3 | 4 | 5; // 1: Order Placed, 2: Preparing, 3: Ready for Pickup, 4: On the Way, 5: Delivered
+    trackingStatus: 0 | 1 | 2 | 3 | 4 | 5; // 0: Cancelled, 1: Order Placed, 2: Preparing, 3: Ready for Pickup, 4: On the Way, 5: Delivered
     placedAt: Timestamp;
     estimatedDelivery?: Timestamp;
     restaurant: RestaurantInfo;
@@ -61,4 +61,7 @@ export interface Order {
     updatedAt?: Timestamp;
     isRated?: boolean; // Whether the order has been rated by the customer
     ratedAt?: Timestamp; // When the order was rated
+    cancellationReason?: string; // Reason for cancellation
+    cancelledAt?: Timestamp; // When the order was cancelled
+    cancelledBy?: 'vendor' | 'customer'; // Who cancelled the order
 }

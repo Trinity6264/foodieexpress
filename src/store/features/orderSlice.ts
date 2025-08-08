@@ -49,6 +49,54 @@ export const fetchRestaurantOrders = createAsyncThunk(
     }
 );
 
+// Async thunk to start real-time listener for restaurant orders (vendor dashboard)
+export const startRestaurantOrdersListener = createAsyncThunk(
+    'orders/startRestaurantOrdersListener',
+    async (restaurantId: string, { dispatch, rejectWithValue }) => {
+        try {
+            console.log('Setting up restaurant orders listener for:', restaurantId);
+            const ordersQuery = query(
+                collection(db, 'orders'),
+                where('vendorId', '==', restaurantId),
+                orderBy('placedAt', 'desc')
+            );
+
+            // Set up real-time listener
+            const unsubscribe = onSnapshot(
+                ordersQuery,
+                (snapshot) => {
+                    console.log('Restaurant orders snapshot received, docs:', snapshot.docs.length);
+                    const ordersList: Order[] = [];
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        console.log('Processing order doc:', doc.id, data);
+                        ordersList.push({
+                            id: doc.id,
+                            ...data,
+                            placedAt: data.placedAt.toDate(),
+                            estimatedDelivery: data.estimatedDelivery?.toDate() || new Date(Date.now() + 45 * 60 * 1000)
+                        } as Order);
+                    });
+                    
+                    console.log('Dispatching setRestaurantOrders with:', ordersList.length, 'orders');
+                    // Dispatch action to update state with real-time data
+                    dispatch(setRestaurantOrders(ordersList));
+                },
+                (error) => {
+                    console.error('Error in restaurant orders snapshot listener:', error);
+                    dispatch(setError(error.message));
+                }
+            );
+
+            // Return the unsubscribe function so the component can store it
+            return { unsubscribe };
+        } catch (error) {
+            console.error('Failed to start restaurant orders listener:', error);
+            return rejectWithValue(error instanceof Error ? error.message : 'Failed to start restaurant orders listener');
+        }
+    }
+);
+
 // Async thunk for fetching user orders (order tracking)
 export const fetchUserOrders = createAsyncThunk(
     'orders/fetchUserOrders',
@@ -57,7 +105,7 @@ export const fetchUserOrders = createAsyncThunk(
             const ordersQuery = query(
                 collection(db, 'orders'),
                 where('userId', '==', userId),
-                where('trackingStatus', 'in', [1, 2, 3, 4, 5]), // Include all orders, including delivered
+                where('trackingStatus', 'in', [1, 2, 3, 4, 5]),
                 orderBy('placedAt', 'desc')
             );
 
@@ -129,6 +177,27 @@ export const updateOrderTrackingStatus = createAsyncThunk(
     }
 );
 
+// Async thunk for cancelling an order
+export const cancelOrder = createAsyncThunk(
+    'orders/cancelOrder',
+    async ({ orderId, reason, cancelledBy }: { orderId: string; reason: string; cancelledBy: 'vendor' | 'customer' }, { rejectWithValue }) => {
+        try {
+            const orderRef = doc(db, 'orders', orderId);
+            await updateDoc(orderRef, {
+                trackingStatus: 0,
+                status: 'cancelled',
+                cancellationReason: reason,
+                cancelledAt: Timestamp.now(),
+                cancelledBy,
+                updatedAt: Timestamp.now()
+            });
+            return { orderId, reason, cancelledBy };
+        } catch (error) {
+            return rejectWithValue(error instanceof Error ? error.message : 'Failed to cancel order');
+        }
+    }
+);
+
 // Async thunk to place a new order
 export const placeOrder = createAsyncThunk(
     'orders/placeOrder',
@@ -158,6 +227,10 @@ const orderSlice = createSlice({
     reducers: {
         setSelectedOrder: (state, action: PayloadAction<string | null>) => {
             state.selectedOrderId = action.payload;
+        },
+        setRestaurantOrders: (state, action: PayloadAction<Order[]>) => {
+            state.restaurantOrders = action.payload;
+            state.lastUpdated = Date.now();
         },
         setUserOrders: (state, action: PayloadAction<Order[]>) => {
             state.userOrders = action.payload;
@@ -219,6 +292,20 @@ const orderSlice = createSlice({
                 state.error = action.payload as string;
             })
             
+            // Real-time restaurant orders listener
+            .addCase(startRestaurantOrdersListener.pending, (state) => {
+                state.restaurantOrdersStatus = 'loading';
+                state.error = null;
+            })
+            .addCase(startRestaurantOrdersListener.fulfilled, (state) => {
+                state.restaurantOrdersStatus = 'succeeded';
+                // Real data comes from setRestaurantOrders action via snapshot listener
+            })
+            .addCase(startRestaurantOrdersListener.rejected, (state, action) => {
+                state.restaurantOrdersStatus = 'failed';
+                state.error = action.payload as string;
+            })
+            
             // User orders (tracking)
             .addCase(fetchUserOrders.pending, (state) => {
                 state.userOrdersStatus = 'loading';
@@ -243,11 +330,47 @@ const orderSlice = createSlice({
             })
             .addCase(updateOrderTrackingStatus.fulfilled, (state, action) => {
                 const { orderId, trackingStatus } = action.payload;
-                const orderIndex = state.userOrders.findIndex(order => order.id === orderId);
-                if (orderIndex >= 0) {
-                    state.userOrders[orderIndex].trackingStatus = trackingStatus as 1 | 2 | 3 | 4 | 5;
-                    state.lastUpdated = Date.now();
+                
+                // Update user orders
+                const userOrderIndex = state.userOrders.findIndex(order => order.id === orderId);
+                if (userOrderIndex >= 0) {
+                    state.userOrders[userOrderIndex].trackingStatus = trackingStatus as 0 | 1 | 2 | 3 | 4 | 5;
                 }
+                
+                // Update restaurant orders
+                const restaurantOrderIndex = state.restaurantOrders.findIndex(order => order.id === orderId);
+                if (restaurantOrderIndex >= 0) {
+                    state.restaurantOrders[restaurantOrderIndex].trackingStatus = trackingStatus as 0 | 1 | 2 | 3 | 4 | 5;
+                }
+                
+                state.lastUpdated = Date.now();
+            })
+            
+            // Cancel order
+            .addCase(cancelOrder.fulfilled, (state, action) => {
+                const { orderId, reason, cancelledBy } = action.payload;
+                
+                // Update user orders
+                const userOrderIndex = state.userOrders.findIndex(order => order.id === orderId);
+                if (userOrderIndex >= 0) {
+                    state.userOrders[userOrderIndex].trackingStatus = 0;
+                    state.userOrders[userOrderIndex].status = 'cancelled';
+                    state.userOrders[userOrderIndex].cancellationReason = reason;
+                    state.userOrders[userOrderIndex].cancelledBy = cancelledBy;
+                    state.userOrders[userOrderIndex].cancelledAt = Timestamp.now();
+                }
+                
+                // Update restaurant orders
+                const restaurantOrderIndex = state.restaurantOrders.findIndex(order => order.id === orderId);
+                if (restaurantOrderIndex >= 0) {
+                    state.restaurantOrders[restaurantOrderIndex].trackingStatus = 0;
+                    state.restaurantOrders[restaurantOrderIndex].status = 'cancelled';
+                    state.restaurantOrders[restaurantOrderIndex].cancellationReason = reason;
+                    state.restaurantOrders[restaurantOrderIndex].cancelledBy = cancelledBy;
+                    state.restaurantOrders[restaurantOrderIndex].cancelledAt = Timestamp.now();
+                }
+                
+                state.lastUpdated = Date.now();
             })
             
             // Place order
@@ -267,6 +390,7 @@ const orderSlice = createSlice({
 
 export const {
     setSelectedOrder,
+    setRestaurantOrders,
     setUserOrders,
     addUserOrder,
     updateUserOrder,
