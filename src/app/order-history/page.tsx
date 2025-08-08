@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Star, Calendar, Receipt, Clock, Package, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Star, Calendar, Receipt, Clock, Package, CheckCircle, XCircle } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { 
     fetchUserOrders, 
@@ -21,9 +21,9 @@ const OrderHistoryPage = () => {
     const loading = useAppSelector(selectUserOrdersLoading);
     const error = useAppSelector(selectOrdersError);
     
-    // Filter for completed and rated orders
+    // Filter for completed orders (delivered or cancelled)
     const completedOrders = allOrders.filter(order => 
-        order.trackingStatus === 5 && order.isRated
+        order.trackingStatus === 5 || order.trackingStatus === 0
     );
 
     // Fetch user's orders from Redux
@@ -107,20 +107,20 @@ const OrderHistoryPage = () => {
                             <Receipt className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                             <h3 className="text-lg font-medium text-gray-900 mb-2">No Order History</h3>
                             <p className="text-gray-600 mb-8">
-                                You haven&apos;t completed and rated any orders yet.
+                                You haven&apos;t completed any orders yet.
                             </p>
                             
                             {/* Info about what appears here */}
                             <div className="text-gray-500 mb-6">
-                                <p className="mb-4">Once you complete and rate orders, you&apos;ll see:</p>
+                                <p className="mb-4">Once you complete orders, you&apos;ll see:</p>
                                 <ul className="space-y-2 text-left max-w-md mx-auto">
                                     <li className="flex items-center">
                                         <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                                        Completed and rated orders
+                                        Delivered orders with ratings
                                     </li>
                                     <li className="flex items-center">
-                                        <Star className="w-4 h-4 text-yellow-500 mr-2" />
-                                        Your ratings and reviews
+                                        <Star className="w-4 h-4 text-red-500 mr-2" />
+                                        Cancelled orders with reasons
                                     </li>
                                     <li className="flex items-center">
                                         <Clock className="w-4 h-4 text-blue-500 mr-2" />
@@ -144,7 +144,8 @@ const OrderHistoryPage = () => {
                 ) : (
                     <div className="space-y-4">
                         <div className="text-sm text-gray-600 mb-4">
-                            {completedOrders.length} completed order{completedOrders.length !== 1 ? 's' : ''}
+                            {completedOrders.length} completed order{completedOrders.length !== 1 ? 's' : ''} 
+                            ({completedOrders.filter(o => o.trackingStatus === 5).length} delivered, {completedOrders.filter(o => o.trackingStatus === 0).length} cancelled)
                         </div>
                         
                         {completedOrders.map((order) => (
@@ -165,9 +166,15 @@ const OrderHistoryPage = () => {
                                         <div className="text-lg font-medium text-gray-900">
                                             ${order.total.toFixed(2)}
                                         </div>
-                                        <div className="text-sm text-green-600 font-medium flex items-center">
-                                            <CheckCircle className="w-4 h-4 mr-1" />
-                                            Delivered
+                                        <div className={`text-sm font-medium flex items-center ${
+                                            order.trackingStatus === 5 ? 'text-green-600' : 'text-red-600'
+                                        }`}>
+                                            {order.trackingStatus === 5 ? (
+                                                <CheckCircle className="w-4 h-4 mr-1" />
+                                            ) : (
+                                                <XCircle className="w-4 h-4 mr-1" />
+                                            )}
+                                            {order.trackingStatus === 5 ? 'Delivered' : 'Cancelled'}
                                         </div>
                                     </div>
                                 </div>
@@ -194,30 +201,53 @@ const OrderHistoryPage = () => {
                                     </div>
                                 </div>
 
-                                {/* Rating Display */}
+                                {/* Rating Display or Cancellation Info */}
                                 <div className="pt-4 border-t border-gray-100">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center">
-                                            <Star className="w-4 h-4 text-yellow-400 fill-current mr-1" />
-                                            <span className="text-sm font-medium text-gray-900">
-                                                You rated this order
+                                    {order.trackingStatus === 5 ? (
+                                        // Delivered order - show rating info
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center">
+                                                <Star className="w-4 h-4 text-yellow-400 fill-current mr-1" />
+                                                <span className="text-sm font-medium text-gray-900">
+                                                    {order.isRated ? 'You rated this order' : 'Not rated yet'}
+                                                </span>
+                                            </div>
+                                            <span className="text-xs text-gray-500">
+                                                {order.isRated && order.ratedAt ? formatDate(order.ratedAt) : ''}
                                             </span>
                                         </div>
-                                        <span className="text-xs text-gray-500">
-                                            {formatDate(order.ratedAt)}
-                                        </span>
-                                    </div>
+                                    ) : (
+                                        // Cancelled order - show cancellation info
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center">
+                                                <XCircle className="w-4 h-4 text-red-400 mr-2" />
+                                                <span className="text-sm font-medium text-gray-900">
+                                                    Cancelled {order.cancelledBy ? `by ${order.cancelledBy}` : ''}
+                                                </span>
+                                            </div>
+                                            <span className="text-xs text-gray-500">
+                                                {order.cancelledAt ? formatDate(order.cancelledAt) : ''}
+                                            </span>
+                                        </div>
+                                    )}
+                                    {order.cancellationReason && (
+                                        <div className="mt-2 text-sm text-gray-600">
+                                            Reason: {order.cancellationReason}
+                                        </div>
+                                    )}
                                 </div>
                                 
-                                {/* Optional: Reorder button */}
-                                <div className="mt-4 pt-4 border-t border-gray-100">
-                                    <button 
-                                        onClick={() => router.push(`/menu/${order.vendorId}`)}
-                                        className="w-full px-4 py-2 border border-orange-600 text-orange-600 rounded-lg hover:bg-orange-50 transition-colors text-sm font-medium"
-                                    >
-                                        Order Again
-                                    </button>
-                                </div>
+                                {/* Reorder button - only for delivered orders */}
+                                {order.trackingStatus === 5 && (
+                                    <div className="mt-4 pt-4 border-t border-gray-100">
+                                        <button 
+                                            onClick={() => router.push(`/menu/${order.vendorId}`)}
+                                            className="w-full px-4 py-2 border border-orange-600 text-orange-600 rounded-lg hover:bg-orange-50 transition-colors text-sm font-medium"
+                                        >
+                                            Order Again
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>
