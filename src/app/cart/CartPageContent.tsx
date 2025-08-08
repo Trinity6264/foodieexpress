@@ -190,6 +190,7 @@ const CartPageContent = () => {
             
             // Create transaction record for financial tracking first
             if (user && currentRestaurantId && reference.orderId) {
+                console.log('Current restaurant ID for transaction:', currentRestaurantId);
                 const paymentMethodMap: Record<string, string> = {
                     'card': 'Credit/Debit Card',
                     'bank': 'Bank Transfer',
@@ -201,21 +202,26 @@ const CartPageContent = () => {
                 
                 const paymentMethodName = paymentMethodMap[reference.channel || 'card'] || `PayStack - ${reference.channel}`;
                 
-                const transactionData = {
+                // Dispatch the createTransaction thunk with the correct parameters
+                console.log('Creating transaction with data:', {
                     orderId: reference.orderId,
                     userId: user.uid,
                     vendorId: currentRestaurantId,
-                    type: 'payment' as const,
                     amount: total,
-                    currency: 'GHS',
-                    status: 'completed' as const,
                     paymentMethod: paymentMethodName,
-                    paymentReference: paymentReference.toString(),
-                    description: `Order payment - ${cartItems.length} item(s)`
-                };
+                    paymentReference: paymentReference.toString()
+                });
                 
-                // Dispatch the createTransaction thunk and wait for it to complete
-                const transactionResult = await dispatch(createTransaction(transactionData));
+                const transactionResult = await dispatch(createTransaction({
+                    orderId: reference.orderId,
+                    userId: user.uid,
+                    vendorId: currentRestaurantId,
+                    amount: total,
+                    paymentMethod: paymentMethodName,
+                    paymentReference: paymentReference.toString()
+                }));
+                
+                console.log('Transaction creation result:', transactionResult);
                 if (transactionResult.meta.requestStatus === 'fulfilled') {
                     transactionId = (transactionResult.payload as { id: string } | undefined)?.id;
                 }

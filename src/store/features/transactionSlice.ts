@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { db } from "@/firebase/init";
-import { collection, addDoc, updateDoc, doc, query, where, orderBy, serverTimestamp, getDocs } from "firebase/firestore";
+import { collection, addDoc, updateDoc, doc, query, where, serverTimestamp, getDocs, Timestamp } from "firebase/firestore";
 import { Transaction, VendorEarnings, UserSpending, PayoutRequest } from "@/interfaces/TransactionInterface";
 
 interface TransactionState {
@@ -86,7 +86,12 @@ export const createTransaction = createAsyncThunk(
                 updateUserSpendingInFirestore(userId, amount)
             ]);
 
-            return { id: docRef.id, ...transactionData };
+            // Return the created transaction with proper timestamp
+            return { 
+                id: docRef.id, 
+                ...transactionData,
+                createdAt: new Date() // Use current date since serverTimestamp() isn't available until after write
+            };
         } catch (error) {
             console.error("Error creating transaction:", error);
             return rejectWithValue(error instanceof Error ? error.message : 'Failed to create transaction');
@@ -233,31 +238,46 @@ export const fetchTransactionHistory = createAsyncThunk(
     'transactions/fetchTransactionHistory',
     async ({ userId, vendorId }: { userId?: string; vendorId?: string }, { rejectWithValue }) => {
         try {
+            console.log('Fetching transactions for:', { userId, vendorId });
+            
             let q;
             if (vendorId) {
+                // Try simple query first, then sort in memory
                 q = query(
                     collection(db, 'transactions'),
-                    where('vendorId', '==', vendorId),
-                    orderBy('createdAt', 'desc')
+                    where('vendorId', '==', vendorId)
                 );
             } else if (userId) {
                 q = query(
                     collection(db, 'transactions'),
-                    where('userId', '==', userId),
-                    orderBy('createdAt', 'desc')
+                    where('userId', '==', userId)
                 );
             } else {
                 throw new Error('Either userId or vendorId must be provided');
             }
             
             const querySnapshot = await getDocs(q);
-            const transactions = querySnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-                createdAt: doc.data().createdAt.toDate(),
-                updatedAt: doc.data().updatedAt?.toDate()
-            })) as Transaction[];
+            console.log('Found transactions:', querySnapshot.docs.length);
             
+            const transactions = querySnapshot.docs.map(doc => {
+                const data = doc.data();
+                console.log('Transaction doc data:', data);
+                return {
+                    id: doc.id,
+                    ...data,
+                    createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(data.createdAt),
+                    updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : (data.updatedAt ? new Date(data.updatedAt) : undefined)
+                };
+            }) as Transaction[];
+            
+            // Sort in memory by createdAt descending
+            transactions.sort((a, b) => {
+                const aTime = a.createdAt instanceof Date ? a.createdAt.getTime() : (a.createdAt as Timestamp).toDate().getTime();
+                const bTime = b.createdAt instanceof Date ? b.createdAt.getTime() : (b.createdAt as Timestamp).toDate().getTime();
+                return bTime - aTime;
+            });
+            
+            console.log('Processed transactions:', transactions);
             return transactions;
         } catch (error) {
             console.error("Error fetching transaction history:", error);
@@ -328,7 +348,7 @@ const transactionSlice = createSlice({
             })
             .addCase(createTransaction.fulfilled, (state, action) => {
                 state.transactionsStatus = 'succeeded';
-                state.transactions.unshift(action.payload as Transaction);
+                state.transactions.unshift(action.payload as unknown as Transaction);
             })
             .addCase(createTransaction.rejected, (state, action) => {
                 state.transactionsStatus = 'failed';

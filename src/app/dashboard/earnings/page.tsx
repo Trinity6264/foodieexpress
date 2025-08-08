@@ -26,14 +26,48 @@ const EarningsPage = () => {
         }).format(amount);
     };
 
-    const formatDate = (date: Date) => {
-        return new Intl.DateTimeFormat('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        }).format(date);
+    const formatDate = (date: Date | any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+        try {
+            if (!date) return 'N/A';
+            
+            // Handle Firestore Timestamp
+            if (date.toDate && typeof date.toDate === 'function') {
+                return new Intl.DateTimeFormat('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }).format(date.toDate());
+            }
+            
+            // Handle regular Date object
+            if (date instanceof Date) {
+                return new Intl.DateTimeFormat('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }).format(date);
+            }
+            
+            // Handle string date
+            if (typeof date === 'string') {
+                return new Intl.DateTimeFormat('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }).format(new Date(date));
+            }
+            
+            return 'Invalid Date';
+        } catch (error) {
+            console.error('Error formatting date:', error, date);
+            return 'Invalid Date';
+        }
     };
 
     const getTransactionIcon = (type: string) => {
@@ -199,6 +233,10 @@ const EarningsPage = () => {
                 <div className="bg-white rounded-lg shadow-sm border">
                     <div className="px-6 py-4 border-b border-gray-200">
                         <h3 className="text-lg font-medium text-gray-900">Transaction History</h3>
+                        {/* Debug info - remove in production */}
+                        <div className="text-xs text-gray-500 mt-1">
+                            Status: {transactionsStatus} | Count: {transactions.length} | Vendor ID: {restaurantInfo?.id}
+                        </div>
                     </div>
                     
                     <div className="overflow-x-auto">
@@ -268,7 +306,7 @@ const EarningsPage = () => {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {formatDate(transaction.createdAt.toDate())}
+                                                {formatDate(transaction.createdAt)}
                                             </td>
                                         </tr>
                                     ))}
