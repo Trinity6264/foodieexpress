@@ -13,6 +13,7 @@ import {
     clearCart,
     CartItem as CartItemType,
 } from '@/store/features/cartSlice';
+import { createTransaction } from '@/store/features/transactionSlice';
 import Link from 'next/link';
 import { usePaystackPayment } from 'react-paystack';
 import { collection, addDoc, doc, updateDoc, Timestamp, getDoc } from 'firebase/firestore';
@@ -33,7 +34,7 @@ interface PaystackReference {
     created_at?: string;
 }
 
-const CartPageContent = () => { // Renamed from CartPage to CartPageContent
+const CartPageContent = () => {
     const router = useRouter();
     const dispatch = useAppDispatch();
     const quantity = useAppSelector((state) => state.cart.items.length);
@@ -140,13 +141,14 @@ const CartPageContent = () => { // Renamed from CartPage to CartPageContent
     };
 
     // Function to update order status after payment
-    const updateOrderStatus = async (orderId: string, paymentReference: string, status: 'Paid' | 'Failed', paymentChannel?: string) => {
+    const updateOrderStatus = async (orderId: string, paymentReference: string, status: 'Paid' | 'Failed', paymentChannel?: string, transactionId?: string) => {
         try {
             const updateData: {
                 paymentStatus: 'Paid' | 'Failed';
                 paymentReference: string;
                 updatedAt: Timestamp;
                 paymentMethod?: string;
+                transactionId?: string;
             } = {
                 paymentStatus: status,
                 paymentReference: paymentReference,
@@ -166,6 +168,11 @@ const CartPageContent = () => { // Renamed from CartPage to CartPageContent
                 updateData.paymentMethod = paymentMethodMap[paymentChannel] || `PayStack - ${paymentChannel}`;
             }
 
+            // Add transaction ID if provided
+            if (transactionId) {
+                updateData.transactionId = transactionId;
+            }
+
             const orderRef = doc(db, 'orders', orderId);
             await updateDoc(orderRef, updateData);
             
@@ -178,28 +185,74 @@ const CartPageContent = () => { // Renamed from CartPage to CartPageContent
     const onSuccess = async (reference: PaystackReference) => {
         const paymentReference = reference.reference || reference;
         
-        // Update order status to paid with payment method info
-        if (reference.orderId) {
-            await updateOrderStatus(reference.orderId, paymentReference.toString(), 'Paid', reference.channel);
+        try {
+            let transactionId: string | undefined;
+            
+            // Create transaction record for financial tracking first
+            if (user && currentRestaurantId && reference.orderId) {
+                const paymentMethodMap: Record<string, string> = {
+                    'card': 'Credit/Debit Card',
+                    'bank': 'Bank Transfer',
+                    'ussd': 'USSD',
+                    'qr': 'QR Code',
+                    'mobile_money': 'Mobile Money',
+                    'bank_transfer': 'Bank Transfer'
+                };
+                
+                const paymentMethodName = paymentMethodMap[reference.channel || 'card'] || `PayStack - ${reference.channel}`;
+                
+                const transactionData = {
+                    orderId: reference.orderId,
+                    userId: user.uid,
+                    vendorId: currentRestaurantId,
+                    type: 'payment' as const,
+                    amount: total,
+                    currency: 'GHS',
+                    status: 'completed' as const,
+                    paymentMethod: paymentMethodName,
+                    paymentReference: paymentReference.toString(),
+                    description: `Order payment - ${cartItems.length} item(s)`
+                };
+                
+                // Dispatch the createTransaction thunk and wait for it to complete
+                const transactionResult = await dispatch(createTransaction(transactionData));
+                if (transactionResult.meta.requestStatus === 'fulfilled') {
+                    transactionId = (transactionResult.payload as { id: string } | undefined)?.id;
+                }
+            }
+            
+            // Update order status to paid with payment method info and transaction ID
+            if (reference.orderId) {
+                await updateOrderStatus(
+                    reference.orderId, 
+                    paymentReference.toString(), 
+                    'Paid', 
+                    reference.channel,
+                    transactionId
+                );
+            }
+            
+            // Update local payment method state for UI
+            if (reference.channel) {
+                const paymentMethodMap: Record<string, string> = {
+                    'card': 'Credit/Debit Card',
+                    'bank': 'Bank Transfer',
+                    'ussd': 'USSD',
+                    'qr': 'QR Code',
+                    'mobile_money': 'Mobile Money',
+                    'bank_transfer': 'Bank Transfer'
+                };
+                setPaymentMethod(paymentMethodMap[reference.channel] || `PayStack - ${reference.channel}`);
+            }
+            
+            alert(`Payment successful! Reference: ${paymentReference}`);
+            dispatch(clearCart());
+            router.push('/track_order');
+            console.log('Payment successful:', reference);
+        } catch (error) {
+            console.error('Error processing successful payment:', error);
+            alert('Payment was successful, but there was an issue processing the order. Please contact support.');
         }
-        
-        // Update local payment method state for UI
-        if (reference.channel) {
-            const paymentMethodMap: Record<string, string> = {
-                'card': 'Credit/Debit Card',
-                'bank': 'Bank Transfer',
-                'ussd': 'USSD',
-                'qr': 'QR Code',
-                'mobile_money': 'Mobile Money',
-                'bank_transfer': 'Bank Transfer'
-            };
-            setPaymentMethod(paymentMethodMap[reference.channel] || `PayStack - ${reference.channel}`);
-        }
-        
-        alert(`Payment successful! Reference: ${paymentReference}`);
-        dispatch(clearCart());
-        router.push('/track_order');
-        console.log('Payment successful:', reference);
     };
 
     const onClose = () => {
