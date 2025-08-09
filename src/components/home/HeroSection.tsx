@@ -1,5 +1,5 @@
 'use client'
-import { ArrowRight, PlayCircle, Search } from "lucide-react";
+// import { ArrowRight, PlayCircle } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
@@ -68,7 +68,7 @@ const HeroSection = () => {
                 </p>
 
                 {/* Search Bar */}
-                <div className="max-w-2xl mx-auto mb-8">
+                {/* <div className="max-w-2xl mx-auto mb-8">
                     <div className="relative">
                         <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                         <input
@@ -80,9 +80,9 @@ const HeroSection = () => {
                             Find Food
                         </button>
                     </div>
-                </div>
+                </div> */}
 
-                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                {/* <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                     <button className="bg-orange-600 text-white px-8 py-4 rounded-lg hover:bg-orange-700 transition-colors font-semibold text-lg flex items-center">
                         {heroSlides[currentSlide].cta}
                         <ArrowRight className="ml-2" size={20} />
@@ -91,7 +91,7 @@ const HeroSection = () => {
                         <PlayCircle className="mr-2" size={20} />
                         Watch Demo
                     </button>
-                </div>
+                </div> */}
             </div>
 
             {/* Slide Indicators */}
