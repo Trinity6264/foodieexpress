@@ -18,6 +18,108 @@ import {
     selectOrdersError
 } from '@/store/features/orderSlice';
 
+// Rating Modal Component - Moved outside to prevent re-creation on every render
+interface RatingModalProps {
+    showRatingModal: boolean;
+    selectedOrder: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+    rating: number;
+    review: string;
+    submittingRating: boolean;
+    setShowRatingModal: (show: boolean) => void;
+    setRating: (rating: number) => void;
+    setReview: (review: string) => void;
+    submitRating: () => void;
+}
+
+const RatingModal: React.FC<RatingModalProps> = ({
+    showRatingModal,
+    selectedOrder,
+    rating,
+    review,
+    submittingRating,
+    setShowRatingModal,
+    setRating,
+    setReview,
+    submitRating
+}) => {
+    if (!showRatingModal || !selectedOrder) return null;
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg max-w-md w-full p-6">
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">Rate Your Experience</h3>
+                    <button 
+                        onClick={() => setShowRatingModal(false)}
+                        className="text-gray-400 hover:text-gray-600"
+                    >
+                        <X className="w-6 h-6" />
+                    </button>
+                </div>
+                
+                <div className="mb-4">
+                    <p className="text-sm text-gray-600 mb-3">How was your experience with {selectedOrder.restaurant.name}?</p>
+                    
+                    {/* Star Rating */}
+                    <div className="flex items-center gap-1 mb-2">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                                key={star}
+                                onClick={() => setRating(star)}
+                                className={`p-1 transition-colors ${rating >= star ? 'text-yellow-400' : 'text-gray-300 hover:text-yellow-300'}`}
+                            >
+                                <Star className="w-8 h-8 fill-current" />
+                            </button>
+                        ))}
+                    </div>
+                    
+                    {/* Rating Text */}
+                    {rating > 0 && (
+                        <p className="text-sm font-medium text-gray-700 mb-3">
+                            {rating === 1 && "Poor - We're sorry to hear that"}
+                            {rating === 2 && "Fair - Room for improvement"}
+                            {rating === 3 && "Good - Meets expectations"}
+                            {rating === 4 && "Very Good - Above expectations"}
+                            {rating === 5 && "Excellent - Outstanding service!"}
+                        </p>
+                    )}
+                    
+                    {/* Review Text */}
+                    <textarea
+                        value={review}
+                        onChange={(e) => setReview(e.target.value)}
+                        placeholder="Share your thoughts about the food, service, or delivery (optional)..."
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none text-black"
+                        rows={3}
+                        maxLength={500}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">{review.length}/500 characters</p>
+                </div>
+                
+                <div className="flex space-x-3">
+                    <button
+                        onClick={() => setShowRatingModal(false)}
+                        className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                        Skip
+                    </button>
+                    <button
+                        onClick={submitRating}
+                        disabled={rating === 0 || submittingRating}
+                        className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
+                            rating === 0 || submittingRating
+                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                : 'bg-orange-600 text-white hover:bg-orange-700'
+                        }`}
+                    >
+                        {submittingRating ? 'Submitting...' : 'Submit Rating'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const TrackOrder = () => {
     const router = useRouter();
     const dispatch = useAppDispatch();
@@ -228,86 +330,6 @@ const TrackOrder = () => {
             minute: '2-digit',
             hour12: true
         });
-    };
-
-    // Rating Modal Component
-    const RatingModal = () => {
-        if (!showRatingModal || !selectedOrder) return null;
-
-        return (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                <div className="bg-white rounded-lg max-w-md w-full p-6">
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-semibold text-gray-900">Rate Your Experience</h3>
-                        <button 
-                            onClick={() => setShowRatingModal(false)}
-                            className="text-gray-400 hover:text-gray-600"
-                        >
-                            <X className="w-6 h-6" />
-                        </button>
-                    </div>
-                    
-                    <div className="mb-4">
-                        <p className="text-sm text-gray-600 mb-3">How was your experience with {selectedOrder.restaurant.name}?</p>
-                        
-                        {/* Star Rating */}
-                        <div className="flex items-center gap-1 mb-2">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                                <button
-                                    key={star}
-                                    onClick={() => setRating(star)}
-                                    className={`p-1 transition-colors ${rating >= star ? 'text-yellow-400' : 'text-gray-300 hover:text-yellow-300'}`}
-                                >
-                                    <Star className="w-8 h-8 fill-current" />
-                                </button>
-                            ))}
-                        </div>
-                        
-                        {/* Rating Text */}
-                        {rating > 0 && (
-                            <p className="text-sm font-medium text-gray-700 mb-3">
-                                {rating === 1 && "Poor - We're sorry to hear that"}
-                                {rating === 2 && "Fair - Room for improvement"}
-                                {rating === 3 && "Good - Meets expectations"}
-                                {rating === 4 && "Very Good - Above expectations"}
-                                {rating === 5 && "Excellent - Outstanding service!"}
-                            </p>
-                        )}
-                        
-                        {/* Review Text */}
-                        <textarea
-                            value={review}
-                            onChange={(e) => setReview(e.target.value)}
-                            placeholder="Share your thoughts about the food, service, or delivery (optional)..."
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none text-black"
-                            rows={3}
-                            maxLength={500}
-                        />
-                        <p className="text-xs text-gray-500 mt-1">{review.length}/500 characters</p>
-                    </div>
-                    
-                    <div className="flex space-x-3">
-                        <button
-                            onClick={() => setShowRatingModal(false)}
-                            className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                        >
-                            Skip
-                        </button>
-                        <button
-                            onClick={submitRating}
-                            disabled={rating === 0 || submittingRating}
-                            className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
-                                rating === 0 || submittingRating
-                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                    : 'bg-orange-600 text-white hover:bg-orange-700'
-                            }`}
-                        >
-                            {submittingRating ? 'Submitting...' : 'Submit Rating'}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        );
     };
 
     const Header = () => (
@@ -648,7 +670,17 @@ const TrackOrder = () => {
             </div>
             
             {/* Rating Modal */}
-            <RatingModal />
+            <RatingModal 
+                showRatingModal={showRatingModal}
+                selectedOrder={selectedOrder}
+                rating={rating}
+                review={review}
+                submittingRating={submittingRating}
+                setShowRatingModal={setShowRatingModal}
+                setRating={setRating}
+                setReview={setReview}
+                submitRating={submitRating}
+            />
         </div>
     );
 };
