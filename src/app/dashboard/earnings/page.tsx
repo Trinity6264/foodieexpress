@@ -20,10 +20,7 @@ const EarningsPage = () => {
     }, [restaurantInfo, dispatch]);
 
     const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD'
-        }).format(amount);
+        return `₵${amount.toFixed(2)}`;
     };
 
     const formatDate = (date: Date | { toDate: () => Date } | string | number | null | undefined) => {
@@ -113,8 +110,7 @@ const EarningsPage = () => {
             <div className="bg-white shadow-sm border-b">
                 <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
                     <h1 className="text-xl font-bold text-gray-900 flex items-center">
-                        <DollarSign className="w-6 h-6 text-green-600 mr-2" />
-                        Earnings & Transactions
+                        ₵ Earnings & Transactions
                     </h1>
                     <Link 
                         href="/dashboard/restaurant-info" 
@@ -136,7 +132,7 @@ const EarningsPage = () => {
                             <div className="ml-4">
                                 <p className="text-sm font-medium text-gray-600">Total Earnings</p>
                                 <p className="text-2xl font-bold text-gray-900">
-                                    {vendorEarnings ? formatCurrency(vendorEarnings.totalEarnings) : '$0.00'}
+                                    {vendorEarnings ? formatCurrency(vendorEarnings.totalEarnings) : '₵0.00'}
                                 </p>
                             </div>
                         </div>
@@ -164,7 +160,7 @@ const EarningsPage = () => {
                             <div className="ml-4">
                                 <p className="text-sm font-medium text-gray-600">Pending Balance</p>
                                 <p className="text-2xl font-bold text-gray-900">
-                                    {vendorEarnings ? formatCurrency(vendorEarnings.pendingEarnings) : '$0.00'}
+                                    {vendorEarnings ? formatCurrency(vendorEarnings.pendingEarnings) : '₵0.00'}
                                 </p>
                             </div>
                         </div>

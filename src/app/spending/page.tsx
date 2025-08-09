@@ -20,10 +20,7 @@ const UserSpendingPage = () => {
     }, [user, dispatch]);
 
     const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD'
-        }).format(amount);
+        return `₵${amount.toFixed(2)}`;
     };
 
     const formatDate = (date: Date | { toDate: () => Date } | string | number | null | undefined) => {
@@ -124,7 +121,7 @@ const UserSpendingPage = () => {
                             <div className="ml-4">
                                 <p className="text-sm font-medium text-gray-600">Total Spent</p>
                                 <p className="text-2xl font-bold text-gray-900">
-                                    {userSpending ? formatCurrency(userSpending.totalSpent) : '$0.00'}
+                                    {userSpending ? formatCurrency(userSpending.totalSpent) : '₵0.00'}
                                 </p>
                             </div>
                         </div>
@@ -166,7 +163,7 @@ const UserSpendingPage = () => {
                             <div className="ml-4">
                                 <p className="text-sm font-medium text-gray-600">Avg Order Value</p>
                                 <p className="text-2xl font-bold text-gray-900">
-                                    {userSpending ? formatCurrency(userSpending.averageOrderValue) : '$0.00'}
+                                    {userSpending ? formatCurrency(userSpending.averageOrderValue) : '₵0.00'}
                                 </p>
                             </div>
                         </div>

@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
-import { ChefHat, Package, Clock, MapPin, DollarSign, User, CheckCircle, Truck, XCircle, UtensilsCrossed, AlertTriangle, Filter } from 'lucide-react';
+import { ChefHat, Package, Clock, MapPin,  User, CheckCircle, Truck, XCircle, UtensilsCrossed, AlertTriangle, Filter } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { startRestaurantOrdersListener, updateOrderTrackingStatus, cancelOrder, selectRestaurantOrders, selectRestaurantOrdersStatus, selectOrdersError } from '@/store/features/orderSlice';
 import { Order } from '@/interfaces/OrderInterface';
@@ -430,7 +430,7 @@ const OrderManagementPage = () => {
                                     </div>
                                     <span>{item.name} x {item.quantity}</span>
                                 </div>
-                                <span className="font-medium">${(item.price * item.quantity).toFixed(2)}</span>
+                                <span className="font-medium">₵{(item.price * item.quantity).toFixed(2)}</span>
                             </li>
                         ))}
                     </ul>
@@ -438,22 +438,21 @@ const OrderManagementPage = () => {
                     <div className="border-t pt-3 space-y-1">
                         <div className="flex justify-between text-sm text-gray-600">
                             <span>Subtotal:</span>
-                            <span>${(order.total - order.delivery.fee - order.taxes.serviceFee).toFixed(2)}</span>
+                            <span>₵{(order.total - order.delivery.fee - order.taxes.serviceFee).toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between text-sm text-gray-600">
                             <span>Delivery Fee:</span>
-                            <span>${order.delivery.fee.toFixed(2)}</span>
+                            <span>₵{order.delivery.fee.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between text-sm text-gray-600">
                             <span>Service Fee:</span>
-                            <span>${order.taxes.serviceFee.toFixed(2)}</span>
+                            <span>₵{order.taxes.serviceFee.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between items-center text-lg font-bold text-gray-900 border-t pt-2">
-                            <div className="flex items-center">
-                                <DollarSign className="w-5 h-5 mr-2" /> 
-                                Total:
+                            <div className="flex items-center"> 
+                                ₵Total:
                             </div>
-                            <span>${order.total.toFixed(2)}</span>
+                            <span>₵{order.total.toFixed(2)}</span>
                         </div>
                     </div>
 

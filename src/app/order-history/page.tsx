@@ -291,7 +291,7 @@ const OrderHistoryPage = () => {
                                     </div>
                                     <div className="text-right">
                                         <div className="text-lg font-medium text-gray-900">
-                                            ${order.total.toFixed(2)}
+                                            ₵{order.total.toFixed(2)}
                                         </div>
                                         <div className={`text-sm font-medium flex items-center ${
                                             isCancelled ? 'text-red-600' : 'text-green-600'
@@ -321,7 +321,7 @@ const OrderHistoryPage = () => {
                                                     {item.quantity}x {item.name}
                                                 </span>
                                                 <span className="text-gray-600">
-                                                    ${(item.price * item.quantity).toFixed(2)}
+                                                    ₵{(item.price * item.quantity).toFixed(2)}
                                                 </span>
                                             </div>
                                         ))}
