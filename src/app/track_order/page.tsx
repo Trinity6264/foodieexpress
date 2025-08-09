@@ -248,25 +248,24 @@ const TrackOrder = () => {
                     </div>
                     
                     <div className="mb-4">
-                        <p className="text-sm text-gray-600 mb-2">How was your order from {selectedOrder.restaurant.name}?</p>
+                        <p className="text-sm text-gray-600 mb-3">How was your experience with {selectedOrder.restaurant.name}?</p>
                         
                         {/* Star Rating */}
-                        <div className="flex space-x-1 mb-4">
+                        <div className="flex items-center gap-1 mb-2">
                             {[1, 2, 3, 4, 5].map((star) => (
                                 <button
                                     key={star}
                                     onClick={() => setRating(star)}
-                                    className={`p-1 transition-colors ${
-                                        star <= rating ? 'text-yellow-400' : 'text-gray-300'
-                                    }`}
+                                    className={`p-1 transition-colors ${rating >= star ? 'text-yellow-400' : 'text-gray-300 hover:text-yellow-300'}`}
                                 >
-                                    <Star className={`w-8 h-8 ${star <= rating ? 'fill-current' : ''}`} />
+                                    <Star className="w-8 h-8 fill-current" />
                                 </button>
                             ))}
                         </div>
                         
+                        {/* Rating Text */}
                         {rating > 0 && (
-                            <p className="text-sm text-gray-600 mb-4">
+                            <p className="text-sm font-medium text-gray-700 mb-3">
                                 {rating === 1 && "Poor - We're sorry to hear that"}
                                 {rating === 2 && "Fair - Room for improvement"}
                                 {rating === 3 && "Good - Meets expectations"}
@@ -280,7 +279,7 @@ const TrackOrder = () => {
                             value={review}
                             onChange={(e) => setReview(e.target.value)}
                             placeholder="Share your thoughts about the food, service, or delivery (optional)..."
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none text-black"
                             rows={3}
                             maxLength={500}
                         />
