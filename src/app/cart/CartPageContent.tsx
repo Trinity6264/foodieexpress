@@ -338,19 +338,56 @@ const CartPageContent = () => { // Renamed from CartPage to CartPageContent
     }
 
     const CartItemRow = ({ item }: { item: CartItemType }) => (
-        <div className="bg-white rounded-lg border p-4 flex gap-4 items-center">
-            <Image src={item.image} alt={item.name} width={80} height={80} className="w-20 h-20 rounded-lg object-cover" />
-            <div className="flex-1">
-                <h3 className="font-semibold text-gray-900">{item.name}</h3>
-                <p className="text-sm text-gray-500">₵{item.price.toFixed(2)}</p>
+        <div className="bg-white rounded-lg border p-4">
+            {/* Mobile Layout */}
+            <div className="flex gap-3 items-start sm:hidden">
+                <Image src={item.image} alt={item.name} width={60} height={60} className="w-15 h-15 rounded-lg object-cover flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-start mb-2">
+                        <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-gray-900 text-sm truncate">{item.name}</h3>
+                            <p className="text-sm text-gray-500">₵{item.price.toFixed(2)}</p>
+                        </div>
+                        <button 
+                            onClick={() => dispatch(removeItem(item.id))} 
+                            className="ml-2 p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full flex-shrink-0 transition-colors"
+                            aria-label="Remove item"
+                        >
+                            <Trash2 size={18} />
+                        </button>
+                    </div>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <button onClick={() => dispatch(decrementQuantity(item.id))} className="p-1 border text-gray-700 rounded-full hover:bg-gray-50"><Minus size={14} /></button>
+                            <span className="font-semibold w-6 text-center text-black text-sm">{item.quantity}</span>
+                            <button onClick={() => dispatch(incrementQuantity(item.id))} className="p-1 border text-gray-700 rounded-full hover:bg-gray-50"><Plus size={14} /></button>
+                        </div>
+                        <div className="font-bold text-gray-700 text-sm">₵{(item.price * item.quantity).toFixed(2)}</div>
+                    </div>
+                </div>
             </div>
-            <div className="flex items-center gap-3">
-                <button onClick={() => dispatch(decrementQuantity(item.id))} className="p-1 border text-gray-700 rounded-full"><Minus size={16} /></button>
-                <span className="font-semibold w-8 text-center text-black">{item.quantity}</span>
-                <button onClick={() => dispatch(incrementQuantity(item.id))} className="p-1 border text-gray-700 rounded-full"><Plus size={16} /></button>
+
+            {/* Desktop Layout */}
+            <div className="hidden sm:flex gap-4 items-center">
+                <Image src={item.image} alt={item.name} width={80} height={80} className="w-20 h-20 rounded-lg object-cover flex-shrink-0" />
+                <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900">{item.name}</h3>
+                    <p className="text-sm text-gray-500">₵{item.price.toFixed(2)}</p>
+                </div>
+                <div className="flex items-center gap-3">
+                    <button onClick={() => dispatch(decrementQuantity(item.id))} className="p-1 border text-gray-700 rounded-full hover:bg-gray-50"><Minus size={16} /></button>
+                    <span className="font-semibold w-8 text-center text-black">{item.quantity}</span>
+                    <button onClick={() => dispatch(incrementQuantity(item.id))} className="p-1 border text-gray-700 rounded-full hover:bg-gray-50"><Plus size={16} /></button>
+                </div>
+                <div className="font-bold w-20 text-right text-gray-700">₵{(item.price * item.quantity).toFixed(2)}</div>
+                <button 
+                    onClick={() => dispatch(removeItem(item.id))} 
+                    className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-full transition-colors flex-shrink-0"
+                    aria-label="Remove item"
+                >
+                    <Trash2 size={20} />
+                </button>
             </div>
-            <div className="font-bold w-20 text-right text-gray-700">₵{(item.price * item.quantity).toFixed(2)}</div>
-            <button onClick={() => dispatch(removeItem(item.id))} className="text-red-500 hover:text-red-700 p-2"><Trash2 size={20} /></button>
         </div>
     );
 
@@ -362,13 +399,15 @@ const CartPageContent = () => { // Renamed from CartPage to CartPageContent
                     <h1 className="text-xl font-bold text-gray-900">Your Cart</h1>
                 </div>
             </div>
-            <div className="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className="md:col-span-2 space-y-4">
-                    {cartItems.map(item => <CartItemRow key={item.id} item={item} />)}
-                </div>
-                <div className="md:col-span-1">
-                    <div className="bg-white rounded-lg border p-6 space-y-4">
-                        <h3 className="text-lg font-semibold text-black">Order Summary</h3>
+            <div className="max-w-6xl mx-auto px-4 py-4 sm:py-8">
+                {/* Mobile: Stack vertically, Desktop: Side by side */}
+                <div className="flex flex-col lg:grid lg:grid-cols-3 gap-4 sm:gap-8">
+                    <div className="lg:col-span-2 space-y-3 sm:space-y-4">
+                        {cartItems.map(item => <CartItemRow key={item.id} item={item} />)}
+                    </div>
+                    <div className="lg:col-span-1">
+                        <div className="bg-white rounded-lg border p-4 sm:p-6 space-y-4 sticky top-24">
+                            <h3 className="text-lg font-semibold text-black">Order Summary</h3>
                         
                         {/* Delivery Location Input */}
                         <div className="space-y-2">
@@ -427,6 +466,7 @@ const CartPageContent = () => { // Renamed from CartPage to CartPageContent
                         >
                             Place Order
                         </button>
+                        </div>
                     </div>
                 </div>
             </div>
