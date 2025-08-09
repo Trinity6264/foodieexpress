@@ -74,7 +74,7 @@ export const signUpUser = createAsyncThunk(
             const user = userCredential.user;
             if (isVendor) {
                 // If the user is a vendor, we might want to initialize some restaurant info
-                const restaurantInfo: RestaurantInfoInterface = {
+                const vendorRestaurantInfo: RestaurantInfoInterface = {
                     id: user.uid,
                     userId: user.uid,
                     name: '',
@@ -95,10 +95,13 @@ export const signUpUser = createAsyncThunk(
                     operatingHours: [],
                 };
                 // Here you would typically save the restaurant info to Firestore
-                await setDoc(doc(db, 'restaurants', user.uid), restaurantInfo, { merge: true });
+                await setDoc(doc(db, 'restaurants', user.uid), vendorRestaurantInfo, { merge: true });
+                
+                const serializableUser: SerializableUser = JSON.parse(JSON.stringify(user));
+                return { user: serializableUser, restaurantInfo: vendorRestaurantInfo };
             } else {
                 // If not a vendor, we can just set an empty restaurant info
-                const restaurantInfo: RestaurantInfoInterface = {
+                const customerRestaurantInfo: RestaurantInfoInterface = {
                     id: user.uid,
                     userId: user.uid,
                     name: '',
@@ -118,10 +121,11 @@ export const signUpUser = createAsyncThunk(
                     isOpen: false,
                     operatingHours: [],
                 };
-                await setDoc(doc(db, 'restaurants', user.uid), restaurantInfo, { merge: true });
+                await setDoc(doc(db, 'restaurants', user.uid), customerRestaurantInfo, { merge: true });
+                
+                const serializableUser: SerializableUser = JSON.parse(JSON.stringify(user));
+                return { user: serializableUser, restaurantInfo: customerRestaurantInfo };
             }
-            const serializableUser: SerializableUser = JSON.parse(JSON.stringify(user));
-            return { user: serializableUser, restaurantInfo: null };
         } catch (error: unknown) {
             if (error instanceof FirebaseError) {
                 let msg = 'Failed to create an account.';

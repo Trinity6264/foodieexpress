@@ -176,19 +176,19 @@ const MenuManagementPage = () => {
                     <div className="bg-white rounded-lg shadow-lg p-6 mb-8 border">
                         <h3 className="text-xl font-semibold text-gray-900 mb-4">{editingItem ? 'Edit Menu Item' : 'Add New Menu Item'}</h3>
                         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <input name="name" value={formData.name} onChange={handleChange} placeholder="Item Name" required className="p-2 border rounded-md" />
-                            <input name="price" type="number" step="0.01" value={formData.price} onChange={handleChange} placeholder="Price (₵)" required className="p-2 border rounded-md" />
-                            <textarea name="description" value={formData.description} onChange={handleChange} placeholder="Description" required className="p-2 border rounded-md md:col-span-2" rows={3} />
-                            <select name="category" value={formData.category} onChange={handleChange} className="p-2 border rounded-md">
+                            <input name="name" value={formData.name} onChange={handleChange} placeholder="Item Name" required className="p-2 border text-black rounded-md" />
+                            <input name="price" type="number" step="0.01" value={formData.price} onChange={handleChange} placeholder="Price (₵)" required className="p-2 border text-black rounded-md" />
+                            <textarea name="description" value={formData.description} onChange={handleChange} placeholder="Description" required className="p-2 text-black border rounded-md md:col-span-2" rows={3} />
+                            <select name="category" value={formData.category} onChange={handleChange} className="p-2 border text-black rounded-md">
                                 <option value="Local Ghanaian Foods">Local Ghanaian Foods</option>
                                 <option value="Foreign Foods">Foreign Foods</option>
                             </select>
                             <div className="md:col-span-2">
                                 <ImageUploadInput maxFiles={3} onImagesSelected={(files) => setSelectedFile(files.length > 0 ? files[0] : null)} currentImages={editingItem ? [editingItem.image] : []} />
                             </div>
-                            <div className="flex items-center space-x-4">
-                                <label className="flex items-center"><input name="popular" type="checkbox" checked={formData.popular} onChange={handleChange} className="h-4 w-4 rounded mr-2" />Popular</label>
-                                <label className="flex items-center"><input name="spicy" type="checkbox" checked={formData.spicy} onChange={handleChange} className="h-4 w-4 rounded mr-2" />Spicy</label>
+                            <div className="flex items-center  space-x-4">
+                                <label className="flex text-black items-center"><input name="popular" type="checkbox" checked={formData.popular} onChange={handleChange} className="h-4 w-4 rounded mr-2" />Popular</label>
+                                <label className="flex text-black items-center"><input name="spicy" type="checkbox" checked={formData.spicy} onChange={handleChange} className="h-4 w-4 rounded mr-2" />Spicy</label>
                             </div>
                             <div className="md:col-span-2 flex justify-end space-x-3 mt-4">
                                 <button type="button" onClick={handleCancel} className="px-4 py-2 bg-gray-200 rounded-md font-semibold hover:bg-gray-300">Cancel</button>

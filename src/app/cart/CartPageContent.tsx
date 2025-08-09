@@ -34,7 +34,7 @@ interface PaystackReference {
     created_at?: string;
 }
 
-const CartPageContent = () => {
+const CartPageContent = () => { // Renamed from CartPage to CartPageContent
     const router = useRouter();
     const dispatch = useAppDispatch();
     const quantity = useAppSelector((state) => state.cart.items.length);
@@ -141,14 +141,13 @@ const CartPageContent = () => {
     };
 
     // Function to update order status after payment
-    const updateOrderStatus = async (orderId: string, paymentReference: string, status: 'Paid' | 'Failed', paymentChannel?: string, transactionId?: string) => {
+    const updateOrderStatus = async (orderId: string, paymentReference: string, status: 'Paid' | 'Failed', paymentChannel?: string) => {
         try {
             const updateData: {
                 paymentStatus: 'Paid' | 'Failed';
                 paymentReference: string;
                 updatedAt: Timestamp;
                 paymentMethod?: string;
-                transactionId?: string;
             } = {
                 paymentStatus: status,
                 paymentReference: paymentReference,
@@ -168,11 +167,6 @@ const CartPageContent = () => {
                 updateData.paymentMethod = paymentMethodMap[paymentChannel] || `PayStack - ${paymentChannel}`;
             }
 
-            // Add transaction ID if provided
-            if (transactionId) {
-                updateData.transactionId = transactionId;
-            }
-
             const orderRef = doc(db, 'orders', orderId);
             await updateDoc(orderRef, updateData);
             
@@ -190,7 +184,9 @@ const CartPageContent = () => {
             
             // Create transaction record for financial tracking first
             if (user && currentRestaurantId && reference.orderId) {
+                console.log('Creating transaction for order:', reference.orderId);
                 console.log('Current restaurant ID for transaction:', currentRestaurantId);
+                
                 const paymentMethodMap: Record<string, string> = {
                     'card': 'Credit/Debit Card',
                     'bank': 'Bank Transfer',
@@ -222,20 +218,16 @@ const CartPageContent = () => {
                 }));
                 
                 console.log('Transaction creation result:', transactionResult);
+                
                 if (transactionResult.meta.requestStatus === 'fulfilled') {
                     transactionId = (transactionResult.payload as { id: string } | undefined)?.id;
+                    console.log('Transaction created with ID:', transactionId);
                 }
             }
             
             // Update order status to paid with payment method info and transaction ID
             if (reference.orderId) {
-                await updateOrderStatus(
-                    reference.orderId, 
-                    paymentReference.toString(), 
-                    'Paid', 
-                    reference.channel,
-                    transactionId
-                );
+                await updateOrderStatus(reference.orderId, paymentReference.toString(), 'Paid', reference.channel);
             }
             
             // Update local payment method state for UI

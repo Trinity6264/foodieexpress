@@ -40,13 +40,20 @@ const AuthForm = ({ isSignUp }: AuthFormProps) => {
 
     useEffect(() => {
         if (user && !isLoading) {
-            if (restaurantInfo?.isVendor) {
+            // If user just signed up as a vendor, always redirect to restaurant setup first
+            if (isSignUp && isVendor) {
+                router.push('/restaurant-setup');
+            }
+            // If user is an existing vendor with restaurant info, go to dashboard
+            else if (restaurantInfo?.isVendor && !isSignUp) {
                 router.push('/dashboard/restaurant-info');
-            } else {
+            }
+            // Regular user (customer)
+            else if (!isVendor) {
                 router.push('/');
             }
         }
-    }, [user, restaurantInfo, isLoading, router]);
+    }, [user, restaurantInfo, isLoading, router, isSignUp, isVendor]);
 
     const displayError = formError || serverError;
 

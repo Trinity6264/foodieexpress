@@ -1,13 +1,16 @@
 // src/app/restaurant-setup/page.tsx
 'use client';
 import React, { useState } from 'react';
-import { ChefHat, Save } from 'lucide-react';
+import { ChefHat, Save, Camera } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { doc, setDoc } from 'firebase/firestore';
-import { db } from '@/firebase/init';
+import { db, storage } from '@/firebase/init';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { RestaurantInfoInterface, OperatingHours } from '@/interfaces/RestaurantInfoInterface';
 import { setRestaurantInfo } from '@/store/features/authSlice';
+import ImageUploadInput from '@/components/ImageUploadInput';
 
 const initialOperatingHours: OperatingHours[] = [
     { day: 'Monday', openTime: '09:00', closeTime: '22:00', isOpen: true },
@@ -41,6 +44,10 @@ const RestaurantSetupPage = () => {
         operatingHours: initialOperatingHours,
     });
     const [isLoading, setIsLoading] = useState(false);
+    const [selectedImage, setSelectedImage] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string>(
+        "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=800&h=400&fit=crop"
+    );
 
     const handleInfoChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
@@ -52,6 +59,28 @@ const RestaurantSetupPage = () => {
         const updatedHours = [...restaurantInformation.operatingHours];
         updatedHours[index] = { ...updatedHours[index], [field]: value } as OperatingHours;
         setRestaurantInformation(prev => ({ ...prev, operatingHours: updatedHours }));
+    };
+
+    const handleImageUpload = (files: File[]) => {
+        if (files.length > 0) {
+            const file = files[0]; // Take the first file
+            setSelectedImage(file);
+            // Create preview URL
+            const previewUrl = URL.createObjectURL(file);
+            setImagePreview(previewUrl);
+        }
+    };
+
+    const uploadImageToStorage = async (file: File, userId: string): Promise<string> => {
+        try {
+            const imageRef = ref(storage, `restaurants/${userId}/profile.jpg`);
+            await uploadBytes(imageRef, file);
+            const downloadURL = await getDownloadURL(imageRef);
+            return downloadURL;
+        } catch (error) {
+            console.error('Error uploading image:', error);
+            throw error;
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -66,8 +95,21 @@ const RestaurantSetupPage = () => {
         }
 
         try {
+            let imageUrl = restaurantInformation.image;
+
+            // Upload the selected image if any
+            if (selectedImage) {
+                try {
+                    imageUrl = await uploadImageToStorage(selectedImage, user.uid);
+                } catch (error) {
+                    console.error('Error uploading image:', error);
+                    alert('Failed to upload image. Using default image instead.');
+                }
+            }
+
             const newRestaurantData: RestaurantInfoInterface = {
                 ...restaurantInformation,
+                image: imageUrl,
                 id: user.uid,
                 userId: user.uid,
                 rating: 0,
@@ -99,6 +141,38 @@ const RestaurantSetupPage = () => {
                 </div>
 
                 <form className="mt-8 space-y-8" onSubmit={handleSubmit}>
+                    {/* Restaurant Image Upload Section */}
+                    <div className="space-y-6">
+                        <h3 className="text-lg font-medium leading-6 text-gray-900 flex items-center">
+                            <Camera className="w-5 h-5 mr-2" />
+                            Restaurant Profile Picture
+                        </h3>
+                        <div className="flex flex-col md:flex-row gap-6 items-center">
+                            {/* Image Preview */}
+                            <div className="flex-shrink-0">
+                                <div className="w-32 h-32 rounded-lg overflow-hidden border-2 border-gray-200 bg-gray-50 relative">
+                                    <Image 
+                                        src={imagePreview} 
+                                        alt="Restaurant preview" 
+                                        fill
+                                        className="object-cover"
+                                    />
+                                </div>
+                            </div>
+                            {/* Upload Component */}
+                            <div className="flex-1">
+                                <p className="text-sm text-gray-600 mb-3">
+                                    Upload a profile picture for your restaurant. This will be displayed to customers.
+                                </p>
+                                <ImageUploadInput
+                                    maxFiles={1}
+                                    onImagesSelected={handleImageUpload}
+                                    currentImages={[]}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
                         {/* Restaurant Info Fields */}
                         <div className="md:col-span-2"><h3 className="text-lg font-medium leading-6 text-gray-900">Basic Information</h3></div>
