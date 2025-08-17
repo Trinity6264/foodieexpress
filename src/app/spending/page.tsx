@@ -20,34 +20,20 @@ const UserSpendingPage = () => {
     }, [user, dispatch]);
 
     const formatCurrency = (amount: number) => {
-        return `₵${amount.toFixed(2)}`;
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD'
+        }).format(amount);
     };
 
-    const formatDate = (date: Date | { toDate: () => Date } | string | number | null | undefined) => {
-        // Handle different date formats
-        let dateObj: Date;
-        
-        if (date && typeof date === 'object' && 'toDate' in date && typeof date.toDate === 'function') {
-            // Firestore Timestamp
-            dateObj = date.toDate();
-        } else if (date instanceof Date) {
-            // Already a Date object
-            dateObj = date;
-        } else if (typeof date === 'string' || typeof date === 'number') {
-            // String or number timestamp
-            dateObj = new Date(date);
-        } else {
-            console.warn('Unknown date format:', date);
-            return 'Invalid Date';
-        }
-
+    const formatDate = (date: Date) => {
         return new Intl.DateTimeFormat('en-US', {
             year: 'numeric',
             month: 'short',
             day: 'numeric',
             hour: '2-digit',
             minute: '2-digit'
-        }).format(dateObj);
+        }).format(date);
     };
 
     const getCurrentMonth = () => {
@@ -121,7 +107,7 @@ const UserSpendingPage = () => {
                             <div className="ml-4">
                                 <p className="text-sm font-medium text-gray-600">Total Spent</p>
                                 <p className="text-2xl font-bold text-gray-900">
-                                    {userSpending ? formatCurrency(userSpending.totalSpent) : '₵0.00'}
+                                    {userSpending ? formatCurrency(userSpending.totalSpent) : '$0.00'}
                                 </p>
                             </div>
                         </div>
@@ -163,7 +149,7 @@ const UserSpendingPage = () => {
                             <div className="ml-4">
                                 <p className="text-sm font-medium text-gray-600">Avg Order Value</p>
                                 <p className="text-2xl font-bold text-gray-900">
-                                    {userSpending ? formatCurrency(userSpending.averageOrderValue) : '₵0.00'}
+                                    {userSpending ? formatCurrency(userSpending.averageOrderValue) : '$0.00'}
                                 </p>
                             </div>
                         </div>
@@ -179,7 +165,7 @@ const UserSpendingPage = () => {
                                 <p className="text-xl font-bold text-gray-900">Vendor ID: {userSpending.favoriteVendor}</p>
                                 <p className="text-gray-600">
                                     Last order: {userSpending.lastOrderDate ? 
-                                        formatDate(userSpending.lastOrderDate) : 'Never'
+                                        formatDate(userSpending.lastOrderDate.toDate()) : 'Never'
                                     }
                                 </p>
                             </div>
@@ -278,7 +264,7 @@ const UserSpendingPage = () => {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {formatDate(transaction.createdAt)}
+                                                {formatDate(transaction.createdAt.toDate())}
                                             </td>
                                         </tr>
                                     ))}

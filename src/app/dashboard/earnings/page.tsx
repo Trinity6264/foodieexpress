@@ -20,34 +20,20 @@ const EarningsPage = () => {
     }, [restaurantInfo, dispatch]);
 
     const formatCurrency = (amount: number) => {
-        return `₵${amount.toFixed(2)}`;
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD'
+        }).format(amount);
     };
 
-    const formatDate = (date: Date | { toDate: () => Date } | string | number | null | undefined) => {
-        // Handle different date formats
-        let dateObj: Date;
-        
-        if (date && typeof date === 'object' && 'toDate' in date && typeof date.toDate === 'function') {
-            // Firestore Timestamp
-            dateObj = date.toDate();
-        } else if (date instanceof Date) {
-            // Already a Date object
-            dateObj = date;
-        } else if (typeof date === 'string' || typeof date === 'number') {
-            // String or number timestamp
-            dateObj = new Date(date);
-        } else {
-            console.warn('Unknown date format:', date);
-            return 'Invalid Date';
-        }
-
+    const formatDate = (date: Date) => {
         return new Intl.DateTimeFormat('en-US', {
             year: 'numeric',
             month: 'short',
             day: 'numeric',
             hour: '2-digit',
             minute: '2-digit'
-        }).format(dateObj);
+        }).format(date);
     };
 
     const getTransactionIcon = (type: string) => {
@@ -110,7 +96,8 @@ const EarningsPage = () => {
             <div className="bg-white shadow-sm border-b">
                 <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
                     <h1 className="text-xl font-bold text-gray-900 flex items-center">
-                        ₵ Earnings & Transactions
+                        <DollarSign className="w-6 h-6 text-green-600 mr-2" />
+                        Earnings & Transactions
                     </h1>
                     <Link 
                         href="/dashboard/restaurant-info" 
@@ -132,7 +119,7 @@ const EarningsPage = () => {
                             <div className="ml-4">
                                 <p className="text-sm font-medium text-gray-600">Total Earnings</p>
                                 <p className="text-2xl font-bold text-gray-900">
-                                    {vendorEarnings ? formatCurrency(vendorEarnings.totalEarnings) : '₵0.00'}
+                                    {vendorEarnings ? formatCurrency(vendorEarnings.totalEarnings) : '$0.00'}
                                 </p>
                             </div>
                         </div>
@@ -160,7 +147,7 @@ const EarningsPage = () => {
                             <div className="ml-4">
                                 <p className="text-sm font-medium text-gray-600">Pending Balance</p>
                                 <p className="text-2xl font-bold text-gray-900">
-                                    {vendorEarnings ? formatCurrency(vendorEarnings.pendingEarnings) : '₵0.00'}
+                                    {vendorEarnings ? formatCurrency(vendorEarnings.pendingEarnings) : '$0.00'}
                                 </p>
                             </div>
                         </div>
@@ -281,7 +268,7 @@ const EarningsPage = () => {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {formatDate(transaction.createdAt)}
+                                                {formatDate(transaction.createdAt.toDate())}
                                             </td>
                                         </tr>
                                     ))}
