@@ -53,6 +53,7 @@ const Header = () => {
                         <Link href="#features" className="text-gray-700 hover:text-orange-600 font-medium transition-colors">Features</Link>
                         <Link href="#about" className="text-gray-700 hover:text-orange-600 font-medium transition-colors">About</Link>
                         <Link href="#contact" className="text-gray-700 hover:text-orange-600 font-medium transition-colors">Contact</Link>
+                        <Link href="/report" className="text-gray-700 hover:text-orange-600 font-medium transition-colors">Report</Link>
                     </nav>
 
                     <div className="hidden md:flex items-center space-x-4">
@@ -161,6 +162,7 @@ const Header = () => {
                             <Link href="#features" className="text-gray-700 hover:text-orange-600 font-medium">Features</Link>
                             <Link href="#about" className="text-gray-700 hover:text-orange-600 font-medium">About</Link>
                             <Link href="#contact" className="text-gray-700 hover:text-orange-600 font-medium">Contact</Link>
+                            <Link href="/report" className="text-gray-700 hover:text-orange-600 font-medium">Report</Link>
                             <div className="flex flex-col space-y-2 pt-4 border-t border-gray-200">
                                 {user ? (
                                     // Authenticated user mobile section
