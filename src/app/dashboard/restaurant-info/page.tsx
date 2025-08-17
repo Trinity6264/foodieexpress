@@ -100,7 +100,7 @@ const RestaurantInfoPage = () => {
 
     const handleLogout = () => {
         dispatch(logout());
-        router.push('/login');
+        router.push('/');
     }
 
     // Add a guard clause to ensure restaurantInfo and editedData are not null.

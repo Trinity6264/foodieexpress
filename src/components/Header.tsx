@@ -19,6 +19,7 @@ const Header = () => {
     const handleLogout = () => {
         dispatch(logout());
         setIsCartDropdownOpen(false);
+        // Let the layout components handle the redirect
     };
 
     // Close dropdown when clicking outside

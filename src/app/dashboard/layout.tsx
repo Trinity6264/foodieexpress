@@ -23,16 +23,20 @@ export default function DashboardLayout({
         // If there is no user, redirect to the login page.
         if (!user) {
             router.push('/login');
+            return;
         }
+        
+        // If user is logged in but not a vendor, redirect to home
         if (user && !restaurantInfo?.isVendor) {
-            // If the user is logged in but has not set up their restaurant,
-            // redirect them to the restaurant setup page.
             router.push('/');
+            return;
         }
+        
         // If the user is logged in but has not set up their restaurant,
         // redirect them to the setup page.
-        else if (!restaurantInfo) {
+        if (user && !restaurantInfo) {
             router.push('/restaurant-setup');
+            return;
         }
         // Step 4: If user is logged in, HAS restaurant info, AND is currently on the setup page:
         //    - Redirect them to the main dashboard info page. This handles the successful setup.
