@@ -11,9 +11,7 @@ const RestaurantsPage = async () => {
         try {
             const restaurantsCollection = collection(db, 'restaurants');
             const q = query(restaurantsCollection, where('isVendor', '==', true));
-
             const querySnapshot = await getDocs(q);
-
             const restaurants = querySnapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data(),
