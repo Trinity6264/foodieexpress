@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Mail, Lock, LogIn, UserPlus, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, LogIn, UserPlus, AlertCircle, Eye, EyeOff, Home } from 'lucide-react';
 import Link from 'next/link';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { loginUser, signUpUser } from '@/store/features/authSlice';
@@ -63,7 +63,12 @@ const AuthForm = ({ isSignUp }: AuthFormProps) => {
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
-            <div className="w-full max-w-md space-y-8 rounded-lg bg-white p-8 shadow-xl">
+            <div className="w-full max-w-md space-y-8 rounded-lg bg-white p-8 shadow-xl relative">
+                {/* Home icon that navigates back to landing */}
+                <Link href="/" aria-label="Go to landing" className="absolute left-4 top-4 text-gray-500 hover:text-gray-700">
+                    <Home className="h-6 w-6" />
+                </Link>
+
                 <div>
                     <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
                         {isSignUp ? 'Create your account' : 'Sign in to your account'}
