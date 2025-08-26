@@ -36,6 +36,32 @@ const EarningsPage = () => {
         }).format(date);
     };
 
+    // Safe converter for Firestore-like timestamps and other date shapes
+    type TimestampLike = { toDate: () => Date };
+    type SecondsLike = { seconds: number };
+
+    const isTimestampLike = (v: unknown): v is TimestampLike => {
+        if (typeof v !== 'object' || v === null) return false;
+        const obj = v as Record<string, unknown>;
+        return typeof obj.toDate === 'function';
+    };
+
+    const isSecondsLike = (v: unknown): v is SecondsLike => {
+        if (typeof v !== 'object' || v === null) return false;
+        const obj = v as Record<string, unknown>;
+        return typeof obj.seconds === 'number';
+    };
+
+    const convertToDate = (value: unknown): Date => {
+        if (!value) return new Date();
+        if (isTimestampLike(value)) return value.toDate();
+        if (typeof value === 'number') return new Date(value);
+        if (typeof value === 'string') return new Date(value);
+        if (isSecondsLike(value)) return new Date(value.seconds * 1000);
+        if (value instanceof Date) return value;
+        return new Date(String(value));
+    };
+
     const getTransactionIcon = (type: string) => {
         switch (type) {
             case 'payment':
@@ -268,7 +294,7 @@ const EarningsPage = () => {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {formatDate(transaction.createdAt.toDate())}
+                                                {formatDate(convertToDate(transaction.createdAt))}
                                             </td>
                                         </tr>
                                     ))}
