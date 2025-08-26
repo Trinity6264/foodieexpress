@@ -94,6 +94,7 @@ const RestaurantInfoPage = () => {
             console.error("Error updating document: ", error);
             alert("Failed to update information.");
         } finally {
+            
             setIsSaving(false);
         }
     };
