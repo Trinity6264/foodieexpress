@@ -36,6 +36,32 @@ const UserSpendingPage = () => {
         }).format(date);
     };
 
+    // Type guards for possible timestamp shapes
+    type TimestampLike = { toDate: () => Date };
+    type SecondsLike = { seconds: number };
+
+    const isTimestampLike = (v: unknown): v is TimestampLike => {
+        if (typeof v !== 'object' || v === null) return false;
+        const obj = v as Record<string, unknown>;
+        return typeof obj.toDate === 'function';
+    };
+
+    const isSecondsLike = (v: unknown): v is SecondsLike => {
+        if (typeof v !== 'object' || v === null) return false;
+        const obj = v as Record<string, unknown>;
+        return typeof obj.seconds === 'number';
+    };
+
+    const convertToDate = (value: unknown): Date => {
+        if (!value) return new Date();
+        if (isTimestampLike(value)) return value.toDate();
+        if (typeof value === 'number') return new Date(value);
+        if (typeof value === 'string') return new Date(value);
+        if (isSecondsLike(value)) return new Date(value.seconds * 1000);
+        if (value instanceof Date) return value;
+        return new Date(String(value));
+    };
+
     const getCurrentMonth = () => {
         return new Date().toISOString().substring(0, 7);
     };
@@ -165,7 +191,7 @@ const UserSpendingPage = () => {
                                 <p className="text-xl font-bold text-gray-900">Vendor ID: {userSpending.favoriteVendor}</p>
                                 <p className="text-gray-600">
                                     Last order: {userSpending.lastOrderDate ? 
-                                        formatDate(userSpending.lastOrderDate.toDate()) : 'Never'
+                                        formatDate(convertToDate(userSpending.lastOrderDate)) : 'Never'
                                     }
                                 </p>
                             </div>
@@ -264,7 +290,7 @@ const UserSpendingPage = () => {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {formatDate(transaction.createdAt.toDate())}
+                                                {formatDate(convertToDate(transaction.createdAt))}
                                             </td>
                                         </tr>
                                     ))}
