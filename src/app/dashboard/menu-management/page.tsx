@@ -7,7 +7,7 @@ import { ChefHat, PlusCircle, Edit, Trash2, Save, AlertTriangle, UtensilsCrossed
 import { MenuItemInterface } from '@/interfaces/ItemInfoInterface';
 import ImageUploadInput from '@/components/ImageUploadInput';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { fetchMenuItems, addMenuItem, updateMenuItem, deleteMenuItem } from '@/store/features/menuSlice';
+import { fetchMenuItems, addMenuItem, updateMenuItem, deleteMenuItem, clearMenu } from '@/store/features/menuSlice';
 
 // A blank item structure for the 'Add New' form
 const blankFormState: Omit<MenuItemInterface, 'id'> = {
@@ -36,6 +36,16 @@ const MenuManagementPage = () => {
         if (restaurantInfo && status === 'idle') {
             dispatch(fetchMenuItems(restaurantInfo.id));
         }
+
+        // If restaurantInfo becomes null (e.g., user logs out), clear menu state
+        if (!restaurantInfo) {
+            dispatch(clearMenu());
+        }
+
+        return () => {
+            // Clear the menu when leaving the page to avoid showing another merchant's menu
+            dispatch(clearMenu());
+        };
     }, [restaurantInfo, status, dispatch]);
 
     const handleShowAddForm = () => {

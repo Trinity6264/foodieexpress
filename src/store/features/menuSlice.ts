@@ -123,7 +123,13 @@ export const deleteMenuItem = createAsyncThunk(
 const menuSlice = createSlice({
     name: 'menu',
     initialState,
-    reducers: {},
+    reducers: {
+        clearMenu(state) {
+            state.items = [];
+            state.status = 'idle';
+            state.error = null;
+        }
+    },
     extraReducers: (builder) => {
         builder
             // Fetch
@@ -158,4 +164,5 @@ const menuSlice = createSlice({
     }
 });
 
+export const { clearMenu } = menuSlice.actions;
 export default menuSlice.reducer;
