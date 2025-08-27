@@ -5,6 +5,9 @@ import { MenuItemInterface } from '@/interfaces/ItemInfoInterface';
 import MenuPageClient from '@/components/MenuPageClient';
 import { notFound } from 'next/navigation';
 
+// Force dynamic rendering so Vercel/Next.js doesn't serve cached static HTML
+export const dynamic = 'force-dynamic';
+
 // No need for the MenuPageProps type definition
 
 async function getRestaurant(id: string): Promise<RestaurantInfoInterface | null> {
@@ -36,8 +39,8 @@ async function getMenuItems(restaurantId: string): Promise<MenuItemInterface[]> 
 }
 
 // Correct the function signature here
-export default async function MenuPage({ params }: { params: Promise<{ restaurantId: string }> }) {
-    const { restaurantId } = await params;
+export default async function MenuPage({ params }: { params: { restaurantId: string } }) {
+    const { restaurantId } = params;
 
     const [restaurant, menuItems] = await Promise.all([
         getRestaurant(restaurantId),
