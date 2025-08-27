@@ -39,8 +39,8 @@ async function getMenuItems(restaurantId: string): Promise<MenuItemInterface[]> 
 }
 
 // Correct the function signature here
-export default async function MenuPage({ params }: { params: { restaurantId: string } }) {
-    const { restaurantId } = params;
+export default async function MenuPage({ params }: { params: Promise<{ restaurantId: string }> }) {
+    const { restaurantId } = await params;
 
     const [restaurant, menuItems] = await Promise.all([
         getRestaurant(restaurantId),
