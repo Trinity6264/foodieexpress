@@ -31,22 +31,23 @@ const MenuManagementPage = () => {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    const restaurantId = restaurantInfo?.id;
+
     useEffect(() => {
-        // Fetch menu items when the component loads if they haven't been fetched yet
-        if (restaurantInfo && status === 'idle') {
-            dispatch(fetchMenuItems(restaurantInfo.id));
-        }
-
-        // If restaurantInfo becomes null (e.g., user logs out), clear menu state
-        if (!restaurantInfo) {
+        // If there's no restaurant id, clear menu state immediately
+        if (!restaurantId) {
             dispatch(clearMenu());
+            return;
         }
 
+        // Fetch menu items for the current restaurant once when restaurantId changes
+        dispatch(fetchMenuItems(restaurantId));
+
+        // Clear the menu when leaving the page or when restaurantId changes
         return () => {
-            // Clear the menu when leaving the page to avoid showing another merchant's menu
             dispatch(clearMenu());
         };
-    }, [restaurantInfo, status, dispatch]);
+    }, [restaurantId, dispatch]);
 
     const handleShowAddForm = () => {
         setEditingItem(null);
