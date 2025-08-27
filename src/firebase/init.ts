@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp,  } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore'; 
+import { getFirestore, clearIndexedDbPersistence } from 'firebase/firestore'; 
 import { getStorage } from 'firebase/storage'; 
  
 
@@ -21,6 +21,15 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
+
+// Clear any persisted IndexedDB cache (browser-only). This ensures previously cached
+// Firestore data is removed so the app won't use stale offline persistence.
+if (typeof window !== 'undefined') {
+    clearIndexedDbPersistence(db).catch((err) => {
+        // 'failed-precondition' can happen if multiple tabs are open; log and continue
+        console.warn('Failed to clear Firestore IndexedDB persistence:', err);
+    });
+}
 
 
 export { app, auth, db, storage };
