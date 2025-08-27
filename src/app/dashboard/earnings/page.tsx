@@ -194,6 +194,7 @@ const EarningsPage = () => {
                     </div>
                 </div>
 
+
                 {/* Average Order Value */}
                 {vendorEarnings && (
                     <div className="bg-white rounded-lg shadow-sm p-6 border mb-8">
