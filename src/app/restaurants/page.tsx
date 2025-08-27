@@ -3,6 +3,9 @@ import { db } from '@/firebase/init';
 import { RestaurantInfoInterface } from '@/interfaces/RestaurantInfoInterface';
 import RestaurantList from '@/components/RestaurantList';
 
+// Ensure this page is rendered dynamically on every request (no static caching)
+export const dynamic = 'force-dynamic';
+
 // This is now an async Server Component.
 const RestaurantsPage = async () => {
 

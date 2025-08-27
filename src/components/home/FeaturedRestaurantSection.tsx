@@ -4,6 +4,9 @@ import RestaurantCard from '../RestaurantCard';
 import { collection, getDocs, limit, query, where } from 'firebase/firestore';
 import { db } from '@/firebase/init';
 
+// Force dynamic rendering to avoid static caching of Firestore data
+export const dynamic = 'force-dynamic';
+
 // This is now an async component to allow for server-side data fetching
 const FeaturedRestaurantSection = async () => {
 
