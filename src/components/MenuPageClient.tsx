@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, ChefHat, ShoppingCart, } from 'lucide-react';
 import Link from 'next/link';
@@ -9,6 +9,8 @@ import { RestaurantInfoInterface } from '@/interfaces/RestaurantInfoInterface';
 import MenuItem from '@/components/MenuItem';
 import { selectCartItemCount } from '@/store/features/cartSlice';
 import { useAppSelector } from '@/store/hooks';
+import { collection, query, onSnapshot } from 'firebase/firestore';
+import { db } from '@/firebase/init';
 
 
 
@@ -23,8 +25,32 @@ export default function MenuPageClient({ restaurant, menuItems }: MenuPageClient
     // Get cart count from Redux store
     const cartItemCount = useAppSelector(selectCartItemCount);
 
+    // Use server-provided menuItems as initial state and subscribe for live updates
+    const [menuItemsLive, setMenuItemsLive] = useState<MenuItemInterface[]>(menuItems || []);
+
+    useEffect(() => {
+        if (!restaurant?.id) return;
+
+        try {
+            const menuCol = collection(db, 'restaurants', restaurant.id, 'menuItems');
+            const q = query(menuCol);
+            const unsubscribe = onSnapshot(q, snapshot => {
+                const live = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as unknown as MenuItemInterface[];
+                setMenuItemsLive(live);
+            }, err => {
+                console.warn('Failed to subscribe to menu items for restaurant', restaurant.id, err);
+            });
+
+            return () => unsubscribe();
+        } catch (err) {
+            console.error('Error subscribing to menu items:', err);
+            return () => {};
+        }
+    }, [restaurant?.id]);
+
+
     // ... (filtering logic remains the same)
-    const filteredItems = menuItems;
+    const filteredItems = menuItemsLive;
 
     // ... (Header and RestaurantInfo components remain the same, but update cart count in Header)
     const Header = () => (

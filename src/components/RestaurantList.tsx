@@ -1,8 +1,10 @@
 'use client'
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Search, Filter, ChefHat, X } from 'lucide-react';
 import RestaurantCard from '@/components/RestaurantCard';
 import { RestaurantInfoInterface } from '@/interfaces/RestaurantInfoInterface';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { db } from '@/firebase/init';
 
 // This component receives the initial list of restaurants from the server.
 export default function RestaurantList({ initialRestaurants }: { initialRestaurants: RestaurantInfoInterface[] }) {
@@ -13,12 +15,37 @@ export default function RestaurantList({ initialRestaurants }: { initialRestaura
     const [sortBy, setSortBy] = useState('popular');
     const [showFilters, setShowFilters] = useState(false);
 
+    // Use server-provided data as initial state, then keep it live via onSnapshot
+    const [restaurants, setRestaurants] = useState<RestaurantInfoInterface[]>(initialRestaurants || []);
+
+    useEffect(() => {
+        // Subscribe to live updates for vendor restaurants
+        try {
+            const restaurantsCol = collection(db, 'restaurants');
+            const q = query(restaurantsCol, where('isVendor', '==', true));
+            const unsubscribe = onSnapshot(q, snapshot => {
+                const live: RestaurantInfoInterface[] = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data(),
+                })) as unknown as RestaurantInfoInterface[];
+                setRestaurants(live);
+            }, err => {
+                console.warn('Failed to subscribe to restaurants:', err);
+            });
+
+            return () => unsubscribe();
+        } catch (err) {
+            console.error('Error setting up restaurant listener:', err);
+            return () => {};
+        }
+    }, []);
+
     // Get unique cuisines from the fetched restaurant data
-    const cuisines = [...new Set(initialRestaurants.map(r => r.cuisine))];
+    const cuisines = [...new Set(restaurants.map((r: RestaurantInfoInterface) => r.cuisine))];
 
     const filteredRestaurants = useMemo(() => {
-        // Start with the full list of restaurants passed as a prop
-        const filtered = initialRestaurants.filter(restaurant => {
+        // Start with the full list of restaurants from live state
+        const filtered = restaurants.filter((restaurant: RestaurantInfoInterface) => {
             const matchesSearch = restaurant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 restaurant.cuisine.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 restaurant.specialty.toLowerCase().includes(searchTerm.toLowerCase());
@@ -37,15 +64,15 @@ export default function RestaurantList({ initialRestaurants }: { initialRestaura
 
         // Sort restaurants
         if (sortBy === 'rating') {
-            filtered.sort((a, b) => b.rating - a.rating);
+            filtered.sort((a: RestaurantInfoInterface, b: RestaurantInfoInterface) => b.rating - a.rating);
         } else if (sortBy === 'delivery') {
-            filtered.sort((a, b) => parseInt(a.deliveryTime) - parseInt(b.deliveryTime));
+            filtered.sort((a: RestaurantInfoInterface, b: RestaurantInfoInterface) => parseInt(a.deliveryTime) - parseInt(b.deliveryTime));
         } else if (sortBy === 'popular') {
-            filtered.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
+            filtered.sort((a: RestaurantInfoInterface, b: RestaurantInfoInterface) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
         }
 
         return filtered;
-    }, [searchTerm, selectedCuisine, selectedRating, selectedDeliveryTime, sortBy, initialRestaurants]);
+    }, [searchTerm, selectedCuisine, selectedRating, selectedDeliveryTime, sortBy, restaurants]);
 
     const clearFilters = () => {
         setSearchTerm('');
@@ -63,7 +90,7 @@ export default function RestaurantList({ initialRestaurants }: { initialRestaura
                     <div className="flex flex-col gap-2.5 md:flex-row items-center justify-between">
                         <div>
                             <h1 className="text-3xl font-bold text-gray-900">All Restaurants</h1>
-                            <p className="text-gray-600 mt-2">Discover amazing food from {initialRestaurants.length} restaurants</p>
+                            <p className="text-gray-600 mt-2">Discover amazing food from {restaurants.length} restaurants</p>
                         </div>
                         <div className="flex items-center space-x-4">
                             <div className="relative">
@@ -97,7 +124,7 @@ export default function RestaurantList({ initialRestaurants }: { initialRestaura
                                 <label className="text-sm font-medium text-gray-700 mb-1 block">Cuisine</label>
                                 <select value={selectedCuisine} onChange={(e) => setSelectedCuisine(e.target.value)} className="border text-gray-800 border-gray-300 rounded-lg px-3 py-2">
                                     <option value="">All Cuisines</option>
-                                    {cuisines.map(cuisine => (
+                                    {cuisines.map((cuisine: string) => (
                                         <option key={cuisine} value={cuisine}>{cuisine}</option>
                                     ))}
                                 </select>
@@ -122,7 +149,7 @@ export default function RestaurantList({ initialRestaurants }: { initialRestaura
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {filteredRestaurants.map((restaurant) => (
+                        {filteredRestaurants.map((restaurant: RestaurantInfoInterface) => (
                             <RestaurantCard restaurant={restaurant} key={restaurant.id} />
                         ))}
                     </div>
